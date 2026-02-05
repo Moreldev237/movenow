@@ -34,6 +34,7 @@ urlpatterns = [
     
     # Auth (Allauth)
     path('accounts/', include('allauth.urls')),
+    
 ]
 
 # Serve media files in development

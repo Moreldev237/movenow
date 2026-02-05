@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Annuler la course - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Annuler la course</h1>
+            <p class="text-gray-600 mt-2">Êtes-vous sûr de vouloir annuler cette course ?</p>
+        </div>
+
+        <!-- Trip Summary -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Détails de la course</h2>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-taxi text-orange-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">{{ trip.dropoff_address }}</h3>
+                        <p class="text-sm text-gray-500">{{ trip.created_at|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-xl font-bold text-gray-800">{{ trip.fare|floatformat:0 }} XAF</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                        {{ trip.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cancellation Form -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Cancellation Reason -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                        Raison de l'annulation <span class="text-red-500">*</span>
+                    </label>
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="radio" name="reason" value="changed_mind" class="h-4 w-4 text-orange-500 border-gray-300 focus:ring-orange-500" checked>
+                            <span class="ml-3 text-gray-700">J'ai changé d'avis</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="reason" value="wrong_address" class="h-4 w-4 text-orange-500 border-gray-300 focus:ring-orange-500">
+                            <span class="ml-3 text-gray-700">Adresse incorrecte</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="reason" value="driver_delay" class="h-4 w-4 text-orange-500 border-gray-300 focus:ring-orange-500">
+                            <span class="ml-3 text-gray-700">Chauffeur en retard</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="reason" value="emergency" class="h-4 w-4 text-orange-500 border-gray-300 focus:ring-orange-500">
+                            <span class="ml-3 text-gray-700">Urgence</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="reason" value="other" class="h-4 w-4 text-orange-500 border-gray-300 focus:ring-orange-500">
+                            <span class="ml-3 text-gray-700">Autre</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Additional Comments -->
+                <div>
+                    <label for="comments" class="block text-sm font-medium text-gray-700 mb-2">
+                        Commentaires supplémentaires (optionnel)
+                    </label>
+                    <textarea id="comments" name="comments" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Expliquez brièvement la raison de votre annulation..."></textarea>
+                </div>
+
+                <!-- Cancellation Policy -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-600 text-sm"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-yellow-800 mb-2">Politique d'annulation</h4>
+                            <ul class="text-sm text-yellow-700 space-y-1">
+                                <li>• Annulation gratuite jusqu'à 2 minutes après la commande</li>
+                                <li>• Frais d'annulation de 500 XAF après acceptation par le chauffeur</li>
+                                <li>• Aucun remboursement après le départ du chauffeur</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <a href="{% url 'booking:trip_detail' trip.id %}" class="text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-arrow-left mr-2"></i>Retour aux détails
+                    </a>
+                    <div class="flex space-x-3">
+                        <a href="{% url 'booking:trip_detail' trip.id %}" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition">
+                            Annuler
+                        </a>
+                        <button type="submit" class="bg-red-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-600 transition">
+                            <i class="fas fa-times mr-2"></i>Confirmer l'annulation
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Help -->
+        <div class="bg-blue-50 rounded-xl p-6 mt-6">
+            <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-question-circle text-blue-500"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-blue-800 mb-2">Besoin d'aide ?</h3>
+                    <p class="text-sm text-blue-700 mb-3">
+                        Si vous avez des questions sur l'annulation ou rencontrez des problèmes, notre équipe de support est là pour vous aider.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="tel:+237612345678" class="inline-flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+                            <i class="fas fa-phone mr-2"></i>Appeler le support
+                        </a>
+                        <a href="{% url 'contact' %}" class="inline-flex items-center bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition">
+                            <i class="fas fa-envelope mr-2"></i>Contacter par email
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Accueil - MoveNow{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="relative bg-gradient-to-br from-gray-900 via-gray-800 to-orange-600 text-white overflow-hidden">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+    </div>
+    
+    <div class="max-w-7xl mx-auto px-4 py-20 relative">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- Text Content -->
+            <div class="space-y-8">
+                <h1 class="text-4xl md:text-6xl font-bold leading-tight">
+                    Votre transport,<br>
+                    <span class="text-orange-400">notre priorité</span>
+                </h1>
+                <p class="text-xl text-gray-200 max-w-lg">
+                    MoveNow connecte les Camerounais avec des conducteurs vérifiés pour des trajets sécurisés et confortables en moto ou taxi.
+                </p>
+                
+                <!-- App Download Buttons -->
+                <div class="flex flex-wrap gap-4">
+                    <a href="#" class="inline-flex items-center bg-black hover:bg-gray-800 px-6 py-3 rounded-xl transition">
+                        <i class="fab fa-google-play text-2xl mr-3"></i>
+                        <div class="text-left">
+                            <p class="text-xs text-gray-400">Disponible sur</p>
+                            <p class="font-semibold">Google Play</p>
+                        </div>
+                    </a>
+                    <a href="#" class="inline-flex items-center bg-black hover:bg-gray-800 px-6 py-3 rounded-xl transition">
+                        <i class="fab fa-apple text-2xl mr-3"></i>
+                        <div class="text-left">
+                            <p class="text-xs text-gray-400">Télécharger sur</p>
+                            <p class="font-semibold">App Store</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div class="flex gap-8 pt-4">
+                    <div>
+                        <p class="text-3xl font-bold text-orange-400">{{ stats.total_drivers }}+</p>
+                        <p class="text-gray-400">Chauffeurs vérifiés</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-orange-400">{{ stats.total_trips }}+</p>
+                        <p class="text-gray-400">Trajets effectués</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-orange-400">4.8</p>
+                        <p class="text-gray-400">Note moyenne</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hero Image/Map -->
+            <div class="relative">
+                <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-4 shadow-2xl">
+                    <div id="hero-map" class="h-[500px] rounded-2xl overflow-hidden"></div>
+                </div>
+                
+                <!-- Floating Card -->
+                <div class="absolute -bottom-6 -left-6 bg-white text-gray-800 p-4 rounded-xl shadow-xl">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-check text-green-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Conducteur trouvé!</p>
+                            <p class="text-sm text-gray-500">Arrivée dans 3 min</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Wave Bottom -->
+    <div class="absolute bottom-0 left-0 right-0">
+        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#f9fafb"/>
+        </svg>
+    </div>
+</section>
+
+<!-- Vehicle Types -->
+<section class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-800">Choisissez votre transport</h2>
+            <p class="text-gray-600 mt-2">Plusieurs options adaptées à vos besoins</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {% for vehicle in vehicle_types %}
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer group" onclick="window.location.href='{% url 'booking:book' %}?type={{ vehicle.id }}'">
+                <div class="h-48 bg-gradient-to-br from-orange-100 to-gray-100 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
+                    <i class="fas fa-{{ vehicle.icon|default:'motorcycle' }} text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% if vehicle.is_popular %}
+                    <span class="absolute top-3 right-3 bg-orange-500 text-white text-xs px-3 py-1 rounded-full">Populaire</span>
+                    {% endif %}
+                </div>
+                <h3 class="text-xl font-bold text-gray-800">{{ vehicle.name }}</h3>
+                <p class="text-gray-500 text-sm mt-1">{{ vehicle.description }}</p>
+                <div class="flex items-center justify-between mt-4">
+                    <span class="text-2xl font-bold text-orange-500">À partir de {{ vehicle.base_price }} XAF</span>
+                    <span class="text-gray-400 text-sm">{{ vehicle.price_per_km }} XAF/km</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-800">Comment ça marche</h2>
+            <p class="text-gray-600 mt-2">3 étapes simples pour votre trajet</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-map-marker-alt text-3xl text-orange-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">1. Définissez votre trajet</h3>
+                <p class="text-gray-500">Entrez votre point de départ et votre destination pour obtenir une estimation</p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-car text-3xl text-orange-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">2. Choisissez votre chauffeur</h3>
+                <p class="text-gray-500">Comparez les prix et les évaluations, puis choisissez votre chauffeur</p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-star text-3xl text-orange-500"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">3. Profitez du voyage</h3>
+                <p class="text-gray-500">Suivez votre trajet en temps réel et payez facilement à l'arrivée</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Promotions -->
+{% if promotions %}
+<section class="py-16 bg-gray-900 text-white">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold">Offres Spéciales</h2>
+            <p class="text-gray-400 mt-2">Profitez de nos promotions en cours</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {% for promo in promotions %}
+            <div class="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold mb-2">{{ promo.code }}</h3>
+                <p class="text-white/80 mb-4">{{ promo.description }}</p>
+                <div class="flex items-center justify-between">
+                    <span class="bg-white/20 px-3 py-1 rounded-full text-sm">-{{ promo.discount_percentage }}%</span>
+                    <span class="text-sm">Valide jusqu'au {{ promo.valid_to|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA Section -->
+<section class="py-20 bg-orange-500">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Prêt à voyager avec MoveNow?</h2>
+        <p class="text-orange-100 text-xl mb-8">Rejoignez des milliers d'utilisateurs satisfaits au Cameroun</p>
+        <div class="flex flex-wrap justify-center gap-4">
+            <a href="{% url 'booking:book' %}" class="bg-white text-orange-500 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition shadow-lg">
+                Commander un trajet
+            </a>
+            <a href="{% url 'register' %}" class="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition">
+                Créer un compte
+            </a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #hero-map {
+        width: 100%;
+        height: 500px;
+        border-radius: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Initialize Hero Map
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mapbox access token - replace with your actual token
+        mapboxgl.accessToken = '{{ mapbox_access_token|default:"pk.eyJ1IjoibW92ZW5vdyIsImEiOiJjbHZkZW5nYm8wMHk0MmpzZzZ3b3E1aGR4In0.example" }}';
+        
+        const map = new mapboxgl.Map({
+            container: 'hero-map',
+            style: 'mapbox://styles/mapbox/dark-v11',
+            center: [9.7678, 4.0511], // Douala coordinates
+            zoom: 12
+        });
+        
+        // Add navigation controls
+        map.addControl(new mapboxgl.NavigationControl());
+        
+        // Add some sample markers
+        const sampleLocations = [
+            { lng: 9.7678, lat: 4.0511, title: 'Position actuelle' },
+            { lng: 9.7800, lat: 4.0600, title: 'Destination' }
+        ];
+        
+        sampleLocations.forEach(loc => {
+            new mapboxgl.Marker({ color: '#f97316' })
+                .setLngLat([loc.lng, loc.lat])
+                .setPopup(new mapboxgl.Popup().setHTML(`<b>${loc.title}</b>`))
+                .addTo(map);
+        });
+        
+        // Draw route line
+        map.on('load', () => {
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': [
+                            [9.7678, 4.0511],
+                            [9.7700, 4.0550],
+                            [9.7750, 4.0580],
+                            [9.7800, 4.0600]
+                        ]
+                    }
+                }
+            });
+            
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#f97316',
+                    'line-width': 4,
+                    'line-opacity': 0.8
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
+

@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Noter la course - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Noter votre course</h1>
+            <p class="text-gray-600 mt-2">Votre avis nous aide à améliorer notre service</p>
+        </div>
+
+        <!-- Trip Summary -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Récapitulatif de la course</h2>
+
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-taxi text-orange-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">{{ trip.dropoff_address }}</h3>
+                        <p class="text-sm text-gray-500">{{ trip.created_at|date:"d/m/Y H:i" }}</p>
+                        <p class="text-sm text-gray-600">{{ trip.fare|floatformat:0 }} XAF</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    {% if trip.driver %}
+                    <div class="flex items-center space-x-3">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">{{ trip.driver.user.get_full_name }}</p>
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400">
+                                    {% for i in "12345" %}
+                                        <i class="fas fa-star{% if forloop.counter > trip.driver.rating %} text-gray-300{% endif %}"></i>
+                                    {% endfor %}
+                                </div>
+                                <span class="text-sm text-gray-500 ml-2">{{ trip.driver.rating|floatformat:1 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Form -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Overall Rating -->
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3">
+                        Note globale <span class="text-red-500">*</span>
+                    </label>
+                    <div class="rating-input flex justify-center space-x-2 mb-2">
+                        {% for i in "12345" %}
+                        <input type="radio" id="rating-{{ i }}" name="rating" value="{{ i }}" {% if i == '5' %}checked{% endif %}>
+                        <label for="rating-{{ i }}" class="cursor-pointer text-3xl text-gray-300 hover:text-yellow-400 transition">
+                            <i class="fas fa-star"></i>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <p class="text-center text-gray-600" id="rating-text">Excellent</p>
+                </div>
+
+                <!-- Detailed Ratings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Punctuality -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ponctualité</label>
+                        <div class="rating-input flex space-x-1">
+                            {% for i in "12345" %}
+                            <input type="radio" id="punctuality-{{ i }}" name="punctuality" value="{{ i }}">
+                            <label for="punctuality-{{ i }}" class="cursor-pointer text-xl text-gray-300 hover:text-yellow-400 transition">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Cleanliness -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Propreté</label>
+                        <div class="rating-input flex space-x-1">
+                            {% for i in "12345" %}
+                            <input type="radio" id="cleanliness-{{ i }}" name="cleanliness" value="{{ i }}">
+                            <label for="cleanliness-{{ i }}" class="cursor-pointer text-xl text-gray-300 hover:text-yellow-400 transition">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Driving -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Conduite</label>
+                        <div class="rating-input flex space-x-1">
+                            {% for i in "12345" %}
+                            <input type="radio" id="driving-{{ i }}" name="driving" value="{{ i }}">
+                            <label for="driving-{{ i }}" class="cursor-pointer text-xl text-gray-300 hover:text-yellow-400 transition">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Communication -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Communication</label>
+                        <div class="rating-input flex space-x-1">
+                            {% for i in "12345" %}
+                            <input type="radio" id="communication-{{ i }}" name="communication" value="{{ i }}">
+                            <label for="communication-{{ i }}" class="cursor-pointer text-xl text-gray-300 hover:text-yellow-400 transition">
+                                <i class="fas fa-star"></i>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comment -->
+                <div>
+                    <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">
+                        Commentaire (optionnel)
+                    </label>
+                    <textarea id="comment" name="comment" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Partagez votre expérience avec ce chauffeur..."></textarea>
+                    <p class="text-sm text-gray-500 mt-1">Votre commentaire sera visible publiquement</p>
+                </div>
+
+                <!-- Submit -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <a href="{% url 'booking:trip_detail' trip.id %}" class="text-gray-500 hover:text-gray-700 font-medium">
+                        <i class="fas fa-arrow-left mr-2"></i>Retour aux détails
+                    </a>
+                    <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                        <i class="fas fa-star mr-2"></i>Soumettre l'évaluation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Rating Guidelines -->
+        <div class="bg-blue-50 rounded-xl p-6 mt-6">
+            <div class="flex items-start space-x-3">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-blue-800 mb-2">Conseils pour l'évaluation</h3>
+                    <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• Soyez honnête et constructif dans vos commentaires</li>
+                        <li>• Les évaluations aident les autres passagers à choisir leur chauffeur</li>
+                        <li>• Un chauffeur bien noté reçoit plus de courses</li>
+                        <li>• Vous pouvez modifier votre évaluation pendant 24h</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize rating system
+    initializeRatingSystem();
+});
+
+function initializeRatingSystem() {
+    // Overall rating
+    const overallRating = document.querySelector('.rating-input');
+    if (overallRating) {
+        const stars = overallRating.querySelectorAll('input');
+        const labels = overallRating.querySelectorAll('label');
+        const ratingText = document.getElementById('rating-text');
+
+        const ratingTexts = {
+            '1': 'Très mauvais',
+            '2': 'Mauvais',
+            '3': 'Moyen',
+            '4': 'Bon',
+            '5': 'Excellent'
+        };
+
+        stars.forEach((star, index) => {
+            star.addEventListener('change', function() {
+                updateStarDisplay(labels, index);
+                if (ratingText && ratingTexts[this.value]) {
+                    ratingText.textContent = ratingTexts[this.value];
+                }
+            });
+        });
+
+        // Hover effects
+        labels.forEach((label, index) => {
+            label.addEventListener('mouseenter', function() {
+                updateStarDisplay(labels, index);
+            });
+
+            label.addEventListener('mouseleave', function() {
+                const checkedStar = overallRating.querySelector('input:checked');
+                if (checkedStar) {
+                    const checkedIndex = Array.from(stars).indexOf(checkedStar);
+                    updateStarDisplay(labels, checkedIndex);
+                } else {
+                    updateStarDisplay(labels, -1);
+                }
+            });
+        });
+    }
+
+    // Detailed ratings
+    document.querySelectorAll('.rating-input').forEach(rating => {
+        if (!rating.closest('.flex.justify-center')) { // Skip overall rating
+            const stars = rating.querySelectorAll('input');
+            const labels = rating.querySelectorAll('label');
+
+            stars.forEach((star, index) => {
+                star.addEventListener('change', function() {
+                    updateStarDisplay(labels, index);
+                });
+            });
+
+            labels.forEach((label, index) => {
+                label.addEventListener('mouseenter', function() {
+                    updateStarDisplay(labels, index);
+                });
+
+                label.addEventListener('mouseleave', function() {
+                    const checkedStar = rating.querySelector('input:checked');
+                    if (checkedStar) {
+                        const checkedIndex = Array.from(stars).indexOf(checkedStar);
+                        updateStarDisplay(labels, checkedIndex);
+                    } else {
+                        updateStarDisplay(labels, -1);
+                    }
+                });
+            });
+        }
+    });
+}
+
+function updateStarDisplay(labels, activeIndex) {
+    labels.forEach((label, index) => {
+        if (index <= activeIndex) {
+            label.classList.add('text-yellow-400');
+            label.classList.remove('text-gray-300');
+        } else {
+            label.classList.remove('text-yellow-400');
+            label.classList.add('text-gray-300');
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -275,3 +275,113 @@ def handler404(request, exception):
 def handler500(request):
     """Gestionnaire d'erreur 500"""
     return render(request, 'core/500.html', status=500)
+
+
+# ============ NOTIFICATIONS API VIEWS ============
+
+@login_required
+def notifications_list(request):
+    """API: Liste des notifications"""
+    if request.method == 'GET':
+        notifications = request.user.notifications.all().order_by('-created_at')[:50]
+        
+        notifications_data = []
+        for notification in notifications:
+            notifications_data.append({
+                'id': notification.id,
+                'type': notification.notification_type,
+                'title': notification.title,
+                'message': notification.message,
+                'is_read': notification.is_read,
+                'link': notification.link,
+                'link_text': notification.link_text,
+                'data': notification.data,
+                'created_at': notification.created_at,
+            })
+        
+        unread_count = request.user.notifications.filter(is_read=False).count()
+        
+        return JsonResponse({
+            'success': True,
+            'notifications': notifications_data,
+            'unread_count': unread_count,
+        })
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def notification_detail(request, notification_id):
+    """API: Détail d'une notification"""
+    notification = get_object_or_404(
+        Notification,
+        id=notification_id,
+        user=request.user
+    )
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'notification': {
+                'id': notification.id,
+                'type': notification.notification_type,
+                'title': notification.title,
+                'message': notification.message,
+                'is_read': notification.is_read,
+                'link': notification.link,
+                'link_text': notification.link_text,
+                'data': notification.data,
+                'created_at': notification.created_at,
+                'read_at': notification.read_at,
+            }
+        })
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def notification_mark_read(request, notification_id):
+    """API: Marquer une notification comme lue"""
+    notification = get_object_or_404(
+        Notification,
+        id=notification_id,
+        user=request.user
+    )
+    
+    if request.method == 'POST':
+        notification.mark_as_read()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Notification marquée comme lue.'
+        })
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def mark_all_notifications_read(request):
+    """API: Marquer toutes les notifications comme lues"""
+    if request.method == 'POST':
+        request.user.notifications.filter(is_read=False).update(
+            is_read=True,
+            read_at=timezone.now()
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Toutes les notifications ont été marquées comme lues.'
+        })
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+# ============ PING API ============
+
+def ping(request):
+    """API: Test de connexion"""
+    return JsonResponse({
+        'success': True,
+        'message': 'Server is running',
+        'timestamp': timezone.now().isoformat(),
+    })

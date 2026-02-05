@@ -23,8 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    'django.contrib.gis',
-    
+
     # Third party apps
     'crispy_forms',
     'crispy_tailwind',
@@ -39,7 +38,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     'storages',
-    
+
     # Local apps
     'accounts',
     'core',
@@ -60,6 +59,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'core.middleware.TimezoneMiddleware',
+
+    'allauth.account.middleware.AccountMiddleware', 
 ]
 
 ROOT_URLCONF = 'movenow.urls'
@@ -87,14 +88,17 @@ ASGI_APPLICATION = 'movenow.asgi.application'
 # Database
 DATABASES = {
     'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': config('DB_NAME', default='movenow_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+        #'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis', 
+        'NAME': 'movenow_db',
+        'USER': 'movenow',
+        'PASSWORD': '123456',
+        'HOST': '/var/run/postgresql',  
+        'PORT': '5433',  
     }
 }
+
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

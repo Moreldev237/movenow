@@ -183,9 +183,9 @@ class PaymentMethod(models.Model):
         on_delete=models.CASCADE,
         related_name='payment_methods'
     )
-    
+
     # Type de paiement
-    method_type = models.CharField(
+    type = models.CharField(
         max_length=20,
         choices=[
             ('mobile_money', _('Mobile Money')),
@@ -251,6 +251,9 @@ class PaymentMethod(models.Model):
     # Métadonnées
     is_default = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    last4 = models.CharField(max_length=4, blank=True, null=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
     metadata = models.JSONField(default=dict, blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -420,3 +423,85 @@ class WithdrawalRequest(models.Model):
             self.save()
             return True
         return False
+
+class Payment(models.Model):
+    """Paiement pour un trajet"""
+    class StatusChoices(models.TextChoices):
+        PENDING = 'pending', _('En attente')
+        PROCESSING = 'processing', _('En traitement')
+        COMPLETED = 'completed', _('Terminé')
+        FAILED = 'failed', _('Échoué')
+        CANCELLED = 'cancelled', _('Annulé')
+        REFUNDED = 'refunded', _('Remboursé')
+
+    trip = models.ForeignKey(
+        'core.Trip',
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.CASCADE,
+        related_name='payments'
+    )
+    payment_method = models.ForeignKey(
+        PaymentMethod,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='payments'
+    )
+    amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.PENDING
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = _("Paiement")
+        verbose_name_plural = _("Paiements")
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Paiement {self.id} - {self.amount} XAF"
+
+class Refund(models.Model):
+    """Remboursement d'un paiement"""
+    class StatusChoices(models.TextChoices):
+        PENDING = 'pending', _('En attente')
+        PROCESSING = 'processing', _('En traitement')
+        COMPLETED = 'completed', _('Terminé')
+        FAILED = 'failed', _('Échoué')
+        CANCELLED = 'cancelled', _('Annulé')
+
+    payment = models.ForeignKey(
+        Payment,
+        on_delete=models.CASCADE,
+        related_name='refunds'
+    )
+    amount = models.DecimalField(
+        max_digits=15,
+        decimal_places=2
+    )
+    reason = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.PENDING
+    )
+    processed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = _("Remboursement")
+        verbose_name_plural = _("Remboursements")
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Remboursement {self.id} - {self.amount} XAF"

@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+
+{% block title %}Commander - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Commander un trajet</h1>
+            <p class="text-gray-500 mt-1">Indiquez votre point de départ et votre destination</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Map Section -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div id="booking-map" class="h-[500px]"></div>
+                </div>
+            </div>
+            
+            <!-- Booking Form -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Détails du trajet</h2>
+                    
+                    <form method="POST" id="booking-form" class="space-y-4">
+                        {% csrf_token %}
+                        
+                        <!-- Vehicle Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Type de véhicule</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                {% for choice in form.vehicle_type %}
+                                <label class="cursor-pointer">
+                                    {{ choice.tag }}
+                                    <span class="flex items-center p-3 border rounded-lg hover:border-orange-500 transition has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
+                                        <i class="fas fa-motorcycle text-orange-500 mr-2"></i>
+                                        <span class="text-sm font-medium">{{ choice.choice_label }}</span>
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Pickup Location -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-map-marker-alt text-green-500 mr-1"></i>
+                                Point de départ
+                            </label>
+                            <div class="relative">
+                                {{ form.pickup_address }}
+                                <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500" onclick="useCurrentLocation()">
+                                    <i class="fas fa-crosshairs"></i>
+                                </button>
+                            </div>
+                            {{ form.pickup_lat }}
+                            {{ form.pickup_lng }}
+                        </div>
+                        
+                        <!-- Dropoff Location -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                                Destination
+                            </label>
+                            {{ form.dropoff_address }}
+                            {{ form.dropoff_lat }}
+                            {{ form.dropoff_lng }}
+                        </div>
+                        
+                        <!-- Shared Ride Option -->
+                        <div class="flex items-center">
+                            <input type="checkbox" id="is_shared" name="is_shared" class="h-4 w-4 text-orange-500 border-gray-300 rounded">
+                            <label for="is_shared" class="ml-2 text-sm text-gray-700">
+                                <i class="fas fa-users text-orange-500 mr-1"></i>
+                                Covoiturage (-30%)
+                            </label>
+                        </div>
+                        
+                        <!-- Estimated Fare -->
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Distance estimée</span>
+                                <span class="font-semibold" id="estimated-distance">-- km</span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-600">Durée estimée</span>
+                                <span class="font-semibold" id="estimated-duration">-- min</span>
+                            </div>
+                            <hr class="my-3">
+                            <div class="flex justify-between items-center">
+                                <span class="text-lg font-semibold text-gray-800">Prix estimé</span>
+                                <span class="text-2xl font-bold text-orange-500" id="estimated-fare">-- XAF</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Promo Code -->
+                        <div class="flex gap-2">
+                            <input type="text" name="promo_code" placeholder="Code promo" class="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                            <button type="button" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                                Appliquer
+                            </button>
+                        </div>
+                        
+                        <!-- Payment Method -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mode de paiement</label>
+                            <select name="payment_method" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                                <option value="cash">Espèces</option>
+                                <option value="mobile_money">Mobile Money</option>
+                                <option value="orange_money">Orange Money</option>
+                                <option value="card">Carte bancaire</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Submit -->
+                        <button type="submit" class="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition shadow-lg">
+                            <i class="fas fa-taxi mr-2"></i>
+                            Rechercher un chauffeur
+                        </button>
+                    </form>
+                    
+                    <!-- Safety Info -->
+                    <div class="mt-6 p-4 bg-green-50 rounded-lg">
+                        <div class="flex items-start">
+                            <i class="fas fa-shield-alt text-green-500 mt-1 mr-3"></i>
+                            <div>
+                                <p class="font-medium text-green-800">Tous nos chauffeurs sont vérifiés</p>
+                                <p class="text-sm text-green-600">Profil validé, note minimum 4.5/5</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom form styles */
+    #id_pickup_address, #id_dropoff_address {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    #id_pickup_address:focus, #id_dropoff_address:focus {
+        border-color: #f97316;
+        box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+        outline: none;
+    }
+    
+    input[type="checkbox"][name="vehicle_type"] {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let map;
+    let pickupMarker, dropoffMarker;
+    let routeLayer;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize map
+        mapboxgl.accessToken = '{{ mapbox_access_token|default:"pk.eyJ1IjoibW92ZW5vdyIsImEiOiJjbHZkZW5nYm8wMHk0MmpzZzZ3b3E1aGR4In0.example" }}';
+        
+        map = new mapboxgl.Map({
+            container: 'booking-map',
+            style: 'mapbox://styles/mapbox/streets-v12',
+            center: [9.7678, 4.0511], // Douala
+            zoom: 13
+        });
+        
+        // Add navigation controls
+        map.addControl(new mapboxgl.NavigationControl());
+        
+        // Add click handler for map
+        map.on('click', handleMapClick);
+        
+        // Form input handlers
+        document.getElementById('id_pickup_address').addEventListener('change', handleAddressChange);
+        document.getElementById('id_dropoff_address').addEventListener('change', handleAddressChange);
+        document.querySelector('input[name="vehicle_type"]').addEventListener('change', calculateFare);
+    });
+    
+    function handleMapClick(e) {
+        const { lng, lat } = e.lngLat;
+        
+        // Determine if setting pickup or dropoff
+        if (!pickupMarker) {
+            setPickup(lng, lat);
+        } else if (!dropoffMarker) {
+            setDropoff(lng, lat);
+            calculateRoute();
+        } else {
+            // Reset and set new pickup
+            removeMarkers();
+            setPickup(lng, lat);
+        }
+    }
+    
+    function setPickup(lng, lat) {
+        if (pickupMarker) pickupMarker.remove();
+        
+        pickupMarker = new mapboxgl.Marker({ color: '#22c55e' })
+            .setLngLat([lng, lat])
+            .setPopup(new mapboxgl.Popup().setHTML('<b>Point de départ</b>'))
+            .addTo(map);
+        
+        document.getElementById('id_pickup_lat').value = lat;
+        document.getElementById('id_pickup_lng').value = lng;
+        
+        // Reverse geocode
+        reverseGeocode(lng, lat, 'id_pickup_address');
+        calculateRoute();
+    }
+    
+    function setDropoff(lng, lat) {
+        if (dropoffMarker) dropoffMarker.remove();
+        
+        dropoffMarker = new mapboxgl.Marker({ color: '#ef4444' })
+            .setLngLat([lng, lat])
+            .setPopup(new mapboxgl.Popup().setHTML('<b>Destination</b>'))
+            .addTo(map);
+        
+        document.getElementById('id_dropoff_lat').value = lat;
+        document.getElementById('id_dropoff_lng').value = lng;
+        
+        // Reverse geocode
+        reverseGeocode(lng, lat, 'id_dropoff_address');
+        calculateRoute();
+    }
+    
+    function removeMarkers() {
+        if (pickupMarker) pickupMarker.remove();
+        if (dropoffMarker) dropoffMarker.remove();
+        pickupMarker = null;
+        dropoffMarker = null;
+    }
+    
+    function reverseGeocode(lng, lat, inputId) {
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.features && data.features.length > 0) {
+                    document.getElementById(inputId).value = data.features[0].place_name;
+                }
+            })
+            .catch(error => console.error('Geocoding error:', error));
+    }
+    
+    function calculateRoute() {
+        if (!pickupMarker || !dropoffMarker) return;
+        
+        const pickup = pickupMarker.getLngLat();
+        const dropoff = dropoffMarker.getLngLat();
+        
+        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    const route = data.routes[0];
+                    
+                    // Update map with route
+                    if (routeLayer) map.removeLayer(routeLayer);
+                    if (map.getSource('route')) map.removeSource('route');
+                    
+                    map.addSource('route', {
+                        'type': 'geojson',
+                        'data': {
+                            'type': 'Feature',
+                            'properties': {},
+                            'geometry': route.geometry
+                        }
+                    });
+                    
+                    map.addLayer({
+                        'id': 'route',
+                        'type': 'line',
+                        'source': 'route',
+                        'layout': {
+                            'line-join': 'round',
+                            'line-cap': 'round'
+                        },
+                        'paint': {
+                            'line-color': '#f97316',
+                            'line-width': 4
+                        }
+                    });
+                    
+                    // Update fare estimate
+                    const distance = (route.distance / 1000).toFixed(1);
+                    const duration = Math.round(route.duration / 60);
+                    
+                    document.getElementById('estimated-distance').textContent = `${distance} km`;
+                    document.getElementById('estimated-duration').textContent = `${duration} min`;
+                    
+                    calculateFare(distance, duration);
+                }
+            })
+            .catch(error => console.error('Routing error:', error));
+    }
+    
+    function calculateFare(distance, duration) {
+        // Get vehicle type base price
+        const vehicleTypeSelect = document.querySelector('input[name="vehicle_type"]:checked');
+        const basePrice = vehicleTypeSelect ? parseFloat(vehicleTypeSelect.dataset.basePrice) || 500 : 500;
+        const pricePerKm = vehicleTypeSelect ? parseFloat(vehicleTypeSelect.dataset.pricePerKm) || 300 : 300;
+        
+        const dist = distance || 0;
+        const dur = duration || 0;
+        
+        // Calculate fare
+        const fare = basePrice + (pricePerKm * dist);
+        
+        // Check shared ride
+        const isShared = document.getElementById('is_shared').checked;
+        const finalFare = isShared ? fare * 0.7 : fare;
+        
+        document.getElementById('estimated-fare').textContent = `${Math.round(finalFare)} XAF`;
+    }
+    
+    function useCurrentLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+                    map.flyTo({ center: [longitude, latitude], zoom: 15 });
+                    setPickup(longitude, latitude);
+                },
+                error => {
+                    alert('Impossible d\'obtenir votre position. Veuillez vérifier les permissions.');
+                }
+            );
+        } else {
+            alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+        }
+    }
+    
+    function handleAddressChange(e) {
+        // Could implement autocomplete here
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,352 @@
+{% extends 'base.html' %}
+
+{% block title %}Détails de la course - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Détails de la course</h1>
+                <p class="text-gray-600 mt-2">Course #{{ trip.id }} - {{ trip.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium
+                    {% if trip.status == 'completed' %}bg-green-100 text-green-800
+                    {% elif trip.status == 'cancelled' %}bg-red-100 text-red-800
+                    {% elif trip.status == 'started' %}bg-blue-100 text-blue-800
+                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                    <i class="fas fa-{% if trip.status == 'completed' %}check-circle
+                               {% elif trip.status == 'cancelled' %}times-circle
+                               {% elif trip.status == 'started' %}play-circle
+                               {% else %}clock{% endif %} mr-2"></i>
+                    {{ trip.get_status_display }}
+                </span>
+                {% if trip.can_be_cancelled %}
+                <a href="{% url 'booking:cancel_trip' trip.id %}" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">
+                    <i class="fas fa-times mr-2"></i>Annuler
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Main Details -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Route Information -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Trajet</h2>
+
+                    <div class="space-y-4">
+                        <!-- Pickup -->
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-green-500"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-800">Point de départ</p>
+                                <p class="text-gray-600">{{ trip.pickup_address }}</p>
+                                {% if trip.pickup_location %}
+                                <p class="text-sm text-gray-500">{{ trip.pickup_location }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Route Line -->
+                        <div class="flex items-center ml-5">
+                            <div class="w-0.5 h-8 bg-gray-300"></div>
+                        </div>
+
+                        <!-- Dropoff -->
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-red-500"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-800">Destination</p>
+                                <p class="text-gray-600">{{ trip.dropoff_address }}</p>
+                                {% if trip.dropoff_location %}
+                                <p class="text-sm text-gray-500">{{ trip.dropoff_location }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Route Stats -->
+                    <div class="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-800">{{ trip.distance|floatformat:1 }}</p>
+                            <p class="text-sm text-gray-500">Distance (km)</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-800">{{ trip.duration }}</p>
+                            <p class="text-sm text-gray-500">Durée (min)</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-gray-800">{{ trip.fare|floatformat:0 }}</p>
+                            <p class="text-sm text-gray-500">Prix (XAF)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Carte du trajet</h2>
+                    <div id="trip-map" class="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <p class="text-gray-500">Carte en cours de chargement...</p>
+                    </div>
+                </div>
+
+                <!-- Driver Information -->
+                {% if trip.driver %}
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Informations du chauffeur</h2>
+
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-2xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800">{{ trip.driver.user.get_full_name }}</h3>
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 mr-1">
+                                        {% for i in "12345" %}
+                                            <i class="fas fa-star{% if forloop.counter > trip.driver.rating %} text-gray-300{% endif %}"></i>
+                                        {% endfor %}
+                                    </div>
+                                    <span>{{ trip.driver.rating|floatformat:1 }}</span>
+                                </div>
+                                <span>{{ trip.driver.total_trips }} courses</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Véhicule</p>
+                            <p class="font-medium text-gray-800">{{ trip.driver.vehicle_plate }}</p>
+                            <p class="text-sm text-gray-600">{{ trip.driver.vehicle_model }}</p>
+                        </div>
+                    </div>
+
+                    {% if trip.status == 'completed' and not trip.rating %}
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <a href="{% url 'booking:rate_trip' trip.id %}" class="inline-flex items-center bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition">
+                            <i class="fas fa-star mr-2"></i>Noter ce chauffeur
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Trip Timeline -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Chronologie de la course</h2>
+
+                    <div class="space-y-4">
+                        {% if trip.created_at %}
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-plus text-blue-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Course créée</p>
+                                <p class="text-sm text-gray-500">{{ trip.created_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if trip.accepted_at %}
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-check text-green-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Course acceptée</p>
+                                <p class="text-sm text-gray-500">{{ trip.accepted_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if trip.arrived_at %}
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-orange-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Chauffeur arrivé</p>
+                                <p class="text-sm text-gray-500">{{ trip.arrived_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if trip.started_at %}
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-play text-blue-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Course démarrée</p>
+                                <p class="text-sm text-gray-500">{{ trip.started_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if trip.completed_at %}
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-flag-checkered text-green-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Course terminée</p>
+                                <p class="text-sm text-gray-500">{{ trip.completed_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if trip.cancelled_at %}
+                        <div class="flex items-start space-x-4">
+                            <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-times text-red-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">Course annulée</p>
+                                <p class="text-sm text-gray-500">{{ trip.cancelled_at|date:"d/m/Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Payment Information -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Paiement</h2>
+
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Prix de base</span>
+                            <span class="font-medium">{{ trip.vehicle_type.base_price|floatformat:0 }} XAF</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Distance ({{ trip.vehicle_type.price_per_km|floatformat:0 }} XAF/km)</span>
+                            <span class="font-medium">{{ trip.vehicle_type.price_per_km|mul:trip.distance|floatformat:0 }} XAF</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Temps ({{ trip.vehicle_type.price_per_minute|floatformat:0 }} XAF/min)</span>
+                            <span class="font-medium">{{ trip.vehicle_type.price_per_minute|mul:trip.duration|floatformat:0 }} XAF</span>
+                        </div>
+
+                        {% if trip.is_shared %}
+                        <div class="flex justify-between text-green-600">
+                            <span>Réduction covoiturage</span>
+                            <span>-{{ trip.sharing_discount }}%</span>
+                        </div>
+                        {% endif %}
+
+                        <hr class="my-3">
+
+                        <div class="flex justify-between text-lg font-bold">
+                            <span>Total</span>
+                            <span>{{ trip.fare|floatformat:0 }} XAF</span>
+                        </div>
+
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Statut</span>
+                            <span class="font-medium
+                                {% if trip.payment_status == 'paid' %}text-green-600
+                                {% elif trip.payment_status == 'failed' %}text-red-600
+                                {% else %}text-yellow-600{% endif %}">
+                                {{ trip.get_payment_status_display }}
+                            </span>
+                        </div>
+
+                        {% if trip.payment_method %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Méthode</span>
+                            <span class="font-medium">{{ trip.get_payment_method_display }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Actions</h2>
+
+                    <div class="space-y-3">
+                        {% if trip.status in 'started,arrived' %}
+                        <button class="w-full bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 transition">
+                            <i class="fas fa-phone mr-2"></i>Contacter le chauffeur
+                        </button>
+                        {% endif %}
+
+                        <a href="{% url 'booking:history' %}" class="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition inline-block text-center">
+                            <i class="fas fa-arrow-left mr-2"></i>Retour à l'historique
+                        </a>
+
+                        {% if trip.status == 'completed' %}
+                        <a href="{% url 'booking:book' %}" class="w-full bg-orange-500 text-white px-4 py-3 rounded-lg hover:bg-orange-600 transition inline-block text-center">
+                            <i class="fas fa-plus mr-2"></i>Nouvelle course
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Support -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Support</h2>
+
+                    <div class="space-y-3">
+                        <button class="w-full bg-red-100 text-red-700 px-4 py-3 rounded-lg hover:bg-red-200 transition">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Signaler un problème
+                        </button>
+
+                        <button class="w-full bg-blue-100 text-blue-700 px-4 py-3 rounded-lg hover:bg-blue-200 transition">
+                            <i class="fas fa-question-circle mr-2"></i>Aide et FAQ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map if available
+    if (typeof mapboxgl !== 'undefined') {
+        mapboxgl.accessToken = '{{ mapbox_access_token|default:"pk.eyJ1IjoibW92ZW5vdyIsImEiOiJjbHZkZW5nYm8wMHk0MmpzZzZ3b3E1aGR4In0.example" }}';
+
+        const map = new mapboxgl.Map({
+            container: 'trip-map',
+            style: 'mapbox://styles/mapbox/streets-v11',
+            center: [9.7678, 4.0511], // Douala coordinates
+            zoom: 12
+        });
+
+        // Add markers for pickup and dropoff
+        {% if trip.pickup_location %}
+        const pickupCoords = '{{ trip.pickup_location }}'.split(',');
+        if (pickupCoords.length === 2) {
+            new mapboxgl.Marker({ color: '#10b981' })
+                .setLngLat([parseFloat(pickupCoords[1]), parseFloat(pickupCoords[0])])
+                .addTo(map);
+        }
+        {% endif %}
+
+        {% if trip.dropoff_location %}
+        const dropoffCoords = '{{ trip.dropoff_location }}'.split(',');
+        if (dropoffCoords.length === 2) {
+            new mapboxgl.Marker({ color: '#ef4444' })
+                .setLngLat([parseFloat(dropoffCoords[1]), parseFloat(dropoffCoords[0])])
+                .addTo(map);
+        }
+        {% endif %}
+    }
+});
+</script>
+{% endblock %}
