@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Notifications</h1>
+                <p class="text-gray-600 mt-2">Restez informé de vos courses et promotions</p>
+            </div>
+            {% if unread_count > 0 %}
+            <button id="mark-all-read" class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+                Tout marquer comme lu
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Notifications List -->
+        {% if notifications %}
+            <div class="space-y-4">
+                {% for notification in notifications %}
+                <div class="bg-white rounded-xl shadow-sm p-6 {% if not notification.is_read %}border-l-4 border-orange-500{% endif %}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-3 mb-2">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center
+                                    {% if notification.notification_type == 'booking' %}bg-blue-100 text-blue-500
+                                    {% elif notification.notification_type == 'payment' %}bg-green-100 text-green-500
+                                    {% elif notification.notification_type == 'trip' %}bg-orange-100 text-orange-500
+                                    {% elif notification.notification_type == 'promotion' %}bg-purple-100 text-purple-500
+                                    {% else %}bg-gray-100 text-gray-500{% endif %}">
+                                    <i class="fas fa-{% if notification.notification_type == 'booking' %}calendar-check
+                                               {% elif notification.notification_type == 'payment' %}credit-card
+                                               {% elif notification.notification_type == 'trip' %}route
+                                               {% elif notification.notification_type == 'promotion' %}gift
+                                               {% else %}bell{% endif %} text-sm"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-800">{{ notification.title }}</h3>
+                                    <p class="text-sm text-gray-500">{{ notification.created_at|date:"d/m/Y H:i" }}</p>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 mb-3">{{ notification.message }}</p>
+
+                            {% if notification.link %}
+                            <a href="{{ notification.link }}" class="inline-flex items-center text-orange-500 hover:text-orange-600 text-sm font-medium">
+                                {{ notification.link_text|default:"Voir détails" }}
+                                <i class="fas fa-arrow-right ml-1"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <div class="flex items-center space-x-2 ml-4">
+                            {% if not notification.is_read %}
+                            <span class="w-2 h-2 bg-orange-500 rounded-full"></span>
+                            {% endif %}
+                            <button class="notification-mark-read text-gray-400 hover:text-gray-600"
+                                    data-notification-id="{{ notification.id }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Load More Button (if needed) -->
+            <div class="text-center mt-8">
+                <button class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition">
+                    Charger plus de notifications
+                </button>
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="bg-white rounded-xl shadow-sm p-12 text-center">
+                <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-bell text-gray-400 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Aucune notification</h3>
+                <p class="text-gray-500">Vous n'avez pas encore de notifications. Elles apparaîtront ici quand vous aurez des mises à jour sur vos courses.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mark notification as read
+    document.querySelectorAll('.notification-mark-read').forEach(button => {
+        button.addEventListener('click', function() {
+            const notificationId = this.dataset.notificationId;
+            const notificationCard = this.closest('.bg-white');
+
+            fetch(`/api/notifications/${notificationId}/mark-read/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove unread indicator
+                    notificationCard.classList.remove('border-l-4', 'border-orange-500');
+                    notificationCard.querySelector('.bg-orange-500')?.remove();
+                    this.style.display = 'none';
+
+                    // Update unread count
+                    const unreadBadge = document.querySelector('.unread-count');
+                    if (unreadBadge) {
+                        const currentCount = parseInt(unreadBadge.textContent) || 0;
+                        if (currentCount > 0) {
+                            unreadBadge.textContent = currentCount - 1;
+                        }
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    });
+
+    // Mark all as read
+    const markAllReadBtn = document.getElementById('mark-all-read');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function() {
+            fetch('/api/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove all unread indicators
+                    document.querySelectorAll('.border-l-4').forEach(card => {
+                        card.classList.remove('border-l-4', 'border-orange-500');
+                    });
+                    document.querySelectorAll('.bg-orange-500').forEach(dot => dot.remove());
+                    document.querySelectorAll('.notification-mark-read').forEach(btn => btn.style.display = 'none');
+
+                    // Hide mark all read button
+                    markAllReadBtn.style.display = 'none';
+
+                    // Update unread count
+                    const unreadBadge = document.querySelector('.unread-count');
+                    if (unreadBadge) {
+                        unreadBadge.textContent = '0';
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,6 +1,4 @@
 from django.db import models
-from django.contrib.gis.db import models as gis_models
-from django.contrib.gis.geos import Point
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from accounts.models import User
@@ -107,10 +105,10 @@ class Driver(models.Model):
     )
     
     # Géolocalisation
-    current_location = gis_models.PointField(
+    current_location = models.CharField(
+        max_length=50,
         null=True,
-        blank=True,
-        srid=4326
+        blank=True
     )
     last_location_update = models.DateTimeField(
         null=True,
@@ -142,7 +140,7 @@ class Driver(models.Model):
     
     def update_location(self, lat, lng):
         """Mettre à jour la position du chauffeur"""
-        self.current_location = Point(lng, lat)
+        self.current_location = f"{lat},{lng}"
         self.last_location_update = timezone.now()
         self.save(update_fields=['current_location', 'last_location_update'])
     
@@ -198,16 +196,16 @@ class Trip(models.Model):
         max_length=255,
         verbose_name=_("Adresse de prise en charge")
     )
-    pickup_location = gis_models.PointField(
-        srid=4326,
+    pickup_location = models.CharField(
+        max_length=50,
         verbose_name=_("Position de prise en charge")
     )
     dropoff_address = models.CharField(
         max_length=255,
         verbose_name=_("Adresse de destination")
     )
-    dropoff_location = gis_models.PointField(
-        srid=4326,
+    dropoff_location = models.CharField(
+        max_length=50,
         verbose_name=_("Position de destination")
     )
     
@@ -254,11 +252,11 @@ class Trip(models.Model):
     )
     
     # Suivi en temps réel
-    current_location = gis_models.PointField(
-        null=True,
-        blank=True,
-        srid=4326
-    )
+    # current_location = gis_models.PointField(
+    #     null=True,
+    #     blank=True,
+    #     srid=4326
+    # )
     estimated_arrival = models.DateTimeField(null=True, blank=True)
     
     # Paiement

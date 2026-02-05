@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Inscription - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <a href="{% url 'home' %}" class="inline-flex items-center space-x-2">
+                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-motorcycle text-white text-2xl"></i>
+                </div>
+                <span class="text-3xl font-bold text-gray-800">Move<span class="text-orange-500">Now</span></span>
+            </a>
+        </div>
+        
+        <!-- Card -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-2">Créer un compte</h2>
+            <p class="text-gray-500 text-center mb-6">Rejoignez MoveNow dès maintenant</p>
+            
+            <!-- Social Login -->
+            <div class="flex gap-4 mb-6">
+                <a href="#" class="flex-1 flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    <i class="fab fa-google text-red-500 mr-2"></i>
+                    <span class="text-sm font-medium">Google</span>
+                </a>
+                <a href="#" class="flex-1 flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    <i class="fab fa-facebook text-blue-600 mr-2"></i>
+                    <span class="text-sm font-medium">Facebook</span>
+                </a>
+            </div>
+            
+            <div class="relative mb-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">ou</span>
+                </div>
+            </div>
+            
+            <!-- Registration Form -->
+            <form method="POST" class="space-y-4">
+                {% csrf_token %}
+                
+                <!-- Name Fields -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Phone -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Password -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Confirm Password -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Terms -->
+                <div class="flex items-start">
+                    <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-orange-500 border-gray-300 rounded mt-0.5">
+                    <label for="terms" class="ml-2 text-sm text-gray-600">
+                        J'accepte les <a href="#" class="text-orange-500 hover:underline">conditions d'utilisation</a>
+                        et la <a href="#" class="text-orange-500 hover:underline">politique de confidentialité</a>
+                    </label>
+                </div>
+                
+                <!-- Submit -->
+                <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                    Créer mon compte
+                </button>
+            </form>
+            
+            <!-- Login Link -->
+            <p class="text-center mt-6 text-gray-600">
+                Déjà un compte? 
+                <a href="{% url 'login' %}" class="text-orange-500 font-medium hover:underline">Se connecter</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

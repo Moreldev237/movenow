@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Mon tableau de bord</h1>
+            <p class="text-gray-600 mt-2">Bienvenue, {{ user.get_full_name|default:user.phone }}</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Total Trips -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-route text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Courses totales</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ stats.total_trips }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completed Trips -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Courses terminées</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ stats.completed_trips }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Spent -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-coins text-orange-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Total dépensé</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ stats.total_spent|floatformat:0 }} XAF</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average Rating -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-star text-yellow-500 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-600">Note moyenne</p>
+                        <p class="text-2xl font-bold text-gray-800">
+                            {% if stats.avg_rating %}
+                                {{ stats.avg_rating|floatformat:1 }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Recent Trips -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Courses récentes</h2>
+                        <a href="{% url 'booking:history' %}" class="text-orange-500 hover:text-orange-600 text-sm font-medium">
+                            Voir tout <i class="fas fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+
+                    {% if recent_trips %}
+                        <div class="space-y-4">
+                            {% for trip in recent_trips %}
+                            <div class="flex items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-taxi text-orange-500"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-800">{{ trip.dropoff_address }}</p>
+                                        <p class="text-sm text-gray-500">{{ trip.created_at|date:"d/m/Y H:i" }}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-bold text-gray-800">{{ trip.fare|floatformat:0 }} XAF</p>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                        {% if trip.status == 'completed' %}bg-green-100 text-green-800
+                                        {% elif trip.status == 'cancelled' %}bg-red-100 text-red-800
+                                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                        {{ trip.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class="fas fa-route text-gray-300 text-4xl mb-4"></i>
+                            <p class="text-gray-500">Aucune course trouvée</p>
+                            <a href="{% url 'booking:book' %}" class="inline-flex items-center mt-2 text-orange-500 hover:text-orange-600">
+                                <i class="fas fa-plus mr-2"></i>Commander une course
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Frequent Drivers -->
+            <div>
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Chauffeurs fréquents</h2>
+
+                    {% if frequent_drivers %}
+                        <div class="space-y-4">
+                            {% for driver in frequent_drivers %}
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-user text-gray-500"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-800">{{ driver.user.get_full_name }}</p>
+                                    <div class="flex items-center">
+                                        <div class="flex text-yellow-400">
+                                            {% for i in "12345" %}
+                                                <i class="fas fa-star{% if forloop.counter > driver.rating %} text-gray-300{% endif %}"></i>
+                                            {% endfor %}
+                                        </div>
+                                        <span class="text-sm text-gray-500 ml-2">{{ driver.trip_count }} courses</span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class="fas fa-users text-gray-300 text-4xl mb-4"></i>
+                            <p class="text-gray-500">Aucun chauffeur fréquent</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl shadow-sm p-6 mt-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-6">Actions rapides</h2>
+                    <div class="space-y-3">
+                        <a href="{% url 'booking:book' %}" class="flex items-center w-full bg-orange-500 text-white px-4 py-3 rounded-lg hover:bg-orange-600 transition">
+                            <i class="fas fa-plus mr-3"></i>
+                            Commander une course
+                        </a>
+                        <a href="{% url 'booking:history' %}" class="flex items-center w-full border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition">
+                            <i class="fas fa-history mr-3"></i>
+                            Historique des courses
+                        </a>
+                        <a href="{% url 'notifications' %}" class="flex items-center w-full border border-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-50 transition">
+                            <i class="fas fa-bell mr-3"></i>
+                            Notifications
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

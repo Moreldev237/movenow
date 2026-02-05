@@ -10,9 +10,3 @@ urlpatterns = [
     path('notifications/<int:notification_id>/read/', 
          views.notification_mark_read, name='notification_mark_read'),
 ]
-
-# API URLs
-api_urlpatterns = [
-    path('calculate-fare/', views.calculate_fare, name='calculate_fare'),
-    path('search-drivers/', views.search_drivers, name='search_drivers'),
-]

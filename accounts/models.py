@@ -95,6 +95,7 @@ class User(AbstractUser):
     
     # Champs non utilisés de AbstractUser
     username = None
+    email = models.EmailField(unique=True, verbose_name=_("Email"))
     first_name = models.CharField(_("Prénom"), max_length=150)
     last_name = models.CharField(_("Nom"), max_length=150)
     

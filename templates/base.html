@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MoveNow - Transport Urbain au Cameroun{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Mapbox GL JS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-motorcycle text-white text-xl"></i>
+                        </div>
+                        <span class="text-2xl font-bold text-gray-800">Move<span class="text-orange-500">Now</span></span>
+                    </a>
+                </div>
+                
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="{% url 'home' %}" class="text-gray-700 hover:text-orange-500 transition">Accueil</a>
+                    <a href="{% url 'about' %}" class="text-gray-700 hover:text-orange-500 transition">À propos</a>
+                    <a href="{% url 'contact' %}" class="text-gray-700 hover:text-orange-500 transition">Contact</a>
+                    
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'booking:book' %}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+                            <i class="fas fa-taxi mr-2"></i>Commander
+                        </a>
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-orange-500">
+                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                    {% if user.avatar %}
+                                        <img src="{{ user.avatar.url }}" alt="" class="w-8 h-8 rounded-full">
+                                    {% else %}
+                                        <i class="fas fa-user"></i>
+                                    {% endif %}
+                                </div>
+                                <span>{{ user.get_full_name|default:user.phone }}</span>
+                                <i class="fas fa-chevron-down text-sm"></i>
+                            </button>
+                            
+                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden">
+                                <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>Tableau de bord
+                                </a>
+                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50">
+                                    <i class="fas fa-user mr-2"></i>Mon profil
+                                </a>
+                                <a href="{% url 'booking:history' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50">
+                                    <i class="fas fa-history mr-2"></i>Mes courses
+                                </a>
+                                <hr class="my-2">
+                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="text-gray-700 hover:text-orange-500 transition">Connexion</a>
+                        <a href="{% url 'register' %}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+                            Inscription
+                        </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button class="text-gray-700 hover:text-orange-500">
+                        <i class="fas fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 mt-4">
+            {% for message in messages %}
+                <div class="p-4 rounded-lg mb-2 {% if message.tags == 'success' %}bg-green-100 text-green-700 border border-green-400{% elif message.tags == 'error' %}bg-red-100 text-red-700 border border-red-400{% else %}bg-blue-100 text-blue-700 border border-blue-400{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-16">
+        <div class="max-w-7xl mx-auto px-4 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand -->
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-motorcycle text-white text-xl"></i>
+                        </div>
+                        <span class="text-2xl font-bold">Move<span class="text-orange-500">Now</span></span>
+                    </div>
+                    <p class="text-gray-400">Solution innovante pour améliorer l'expérience des transports urbains au Cameroun.</p>
+                </div>
+                
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Liens rapides</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'home' %}" class="text-gray-400 hover:text-orange-500">Accueil</a></li>
+                        <li><a href="{% url 'about' %}" class="text-gray-400 hover:text-orange-500">À propos</a></li>
+                        <li><a href="{% url 'contact' %}" class="text-gray-400 hover:text-orange-500">Contact</a></li>
+                        <li><a href="{% url 'booking:book' %}" class="text-gray-400 hover:text-orange-500">Commander</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Services -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Services</h3>
+                    <ul class="space-y-2">
+                        <li><span class="text-gray-400">Taxi moto</span></li>
+                        <li><span class="text-gray-400">Taxi voiture</span></li>
+                        <li><span class="text-gray-400">Covoiturage</span></li>
+                        <li><span class="text-gray-400">Livraison</span></li>
+                    </ul>
+                </div>
+                
+                <!-- Contact -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Contact</h3>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-map-marker-alt mr-2"></i>Douala, Cameroun</li>
+                        <li><i class="fas fa-phone mr-2"></i>+237 6XX XXX XXX</li>
+                        <li><i class="fas fa-envelope mr-2"></i>contact@movenow.cm</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="border-gray-800 my-8">
+            
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400">© 2024 MoveNow. Tous droits réservés.</p>
+                <div class="flex space-x-4 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-facebook fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-twitter fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-instagram fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

@@ -13,6 +13,8 @@ from .forms import BookingForm
 from .models import Booking, BookingRequest, TripTracking
 from core.models import Trip, Driver, VehicleType
 from core.utils import calculate_route, estimate_fare
+from django.contrib.gis.geos import Point
+from django.contrib.gis.db.models.functions import Distance
 
 @login_required
 @passenger_required
@@ -180,6 +182,61 @@ def reject_booking(request, request_id):
     return redirect('drivers:dashboard')
 
 @login_required
+def get_booking_request(request, request_id):
+    """Récupérer les détails d'une demande de réservation (API)"""
+    booking_request = get_object_or_404(
+        BookingRequest,
+        id=request_id
+    )
+    
+    # Vérifier que l'utilisateur est le passager ou le chauffeur
+    is_passenger = booking_request.booking.passenger == request.user
+    is_driver = hasattr(request.user, 'driver_profile') and booking_request.driver == request.user.driver_profile
+    
+    if not (is_passenger or is_driver):
+        return JsonResponse(
+            {'error': 'Vous n\'êtes pas autorisé à voir cette demande.'},
+            status=403
+        )
+    
+    # Construire la réponse
+    data = {
+        'id': booking_request.id,
+        'status': booking_request.status,
+        'sent_at': booking_request.sent_at.isoformat() if booking_request.sent_at else None,
+        'responded_at': booking_request.responded_at.isoformat() if booking_request.responded_at else None,
+        'expires_at': booking_request.expires_at.isoformat() if booking_request.expires_at else None,
+        'booking': {
+            'id': booking_request.booking.id,
+            'booking_id': str(booking_request.booking.booking_id),
+            'pickup_address': booking_request.booking.pickup_address,
+            'dropoff_address': booking_request.booking.dropoff_address,
+            'pickup_lat': booking_request.booking.pickup_lat,
+            'pickup_lng': booking_request.booking.pickup_lng,
+            'dropoff_lat': booking_request.booking.dropoff_lat,
+            'dropoff_lng': booking_request.booking.dropoff_lng,
+            'distance': float(booking_request.booking.distance),
+            'duration': booking_request.booking.duration,
+            'estimated_fare': str(booking_request.booking.estimated_fare),
+            'status': booking_request.booking.status,
+            'created_at': booking_request.booking.created_at.isoformat(),
+        },
+        'driver': {
+            'id': booking_request.driver.id,
+            'user': {
+                'id': booking_request.driver.user.id,
+                'first_name': booking_request.driver.user.first_name,
+                'last_name': booking_request.driver.user.last_name,
+                'phone': booking_request.driver.user.phone if hasattr(booking_request.driver.user, 'phone') else None,
+            },
+            'vehicle_type': booking_request.driver.vehicle_type.name if booking_request.driver.vehicle_type else None,
+            'rating': float(booking_request.driver.rating) if booking_request.driver.rating else None,
+        } if is_passenger or is_driver else None,
+    }
+    
+    return JsonResponse(data)
+
+@login_required
 def trip_detail(request, trip_id):
     """Détails d'une course"""
     trip = get_object_or_404(
@@ -232,6 +289,49 @@ def trip_history(request):
     }
     
     return render(request, 'booking/history.html', context)
+
+@login_required
+def trip_history_filtered(request, filter_type):
+    """Historique des courses filtré par type (API)"""
+    if request.user.is_driver:
+        trips = Trip.objects.filter(driver=request.user.driver_profile)
+    else:
+        trips = Trip.objects.filter(passenger=request.user)
+    
+    # Appliquer le filtre selon le type
+    filter_type = filter_type.lower()
+    
+    if filter_type == 'upcoming':
+        # Courses à venir (scheduled, in_progress)
+        trips = trips.filter(status__in=['scheduled', 'in_progress'])
+    elif filter_type == 'completed':
+        # Courses terminées
+        trips = trips.filter(status='completed')
+    elif filter_type == 'cancelled':
+        # Courses annulées
+        trips = trips.filter(status='cancelled')
+    elif filter_type == 'all':
+        # Toutes les courses (pas de filtre)
+        pass
+    else:
+        # Type de filtre inconnu, retourner vide
+        trips = trips.none()
+    
+    trips = trips.order_by('-created_at')
+    
+    # Retourner une réponse JSON pour l'API
+    from django.core import serializers
+    
+    data = [{
+        'id': trip.id,
+        'status': trip.status,
+        'created_at': trip.created_at.isoformat(),
+        'pickup_address': trip.pickup_address,
+        'dropoff_address': trip.dropoff_address,
+        'fare': str(trip.fare) if trip.fare else None,
+    } for trip in trips]
+    
+    return JsonResponse({'trips': data, 'filter_type': filter_type})
 
 @login_required
 def cancel_trip(request, trip_id):
@@ -332,3 +432,110 @@ def rate_trip(request, trip_id):
         return redirect('booking:trip_detail', trip_id=trip.id)
     
     return render(request, 'booking/rate_trip.html', {'trip': trip})
+
+def estimate_fare(request):
+    """Estimer le prix d'une course (API)"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            distance = float(data.get('distance'))
+            duration = int(data.get('duration'))
+            vehicle_type_id = int(data.get('vehicle_type'))
+            is_shared = data.get('is_shared', False)
+        except (ValueError, KeyError, json.JSONDecodeError):
+            return JsonResponse({'error': 'Données invalides'}, status=400)
+    else:
+        # GET parameters
+        try:
+            distance = float(request.GET.get('distance'))
+            duration = int(request.GET.get('duration'))
+            vehicle_type_id = int(request.GET.get('vehicle_type'))
+            is_shared = request.GET.get('is_shared', 'false').lower() == 'true'
+        except (ValueError, TypeError):
+            return JsonResponse({'error': 'Paramètres invalides'}, status=400)
+
+    try:
+        vehicle_type = VehicleType.objects.get(id=vehicle_type_id, is_active=True)
+    except VehicleType.DoesNotExist:
+        return JsonResponse({'error': 'Type de véhicule invalide'}, status=400)
+
+    estimated_fare = estimate_fare(vehicle_type, distance, duration, is_shared)
+
+    return JsonResponse({
+        'estimated_fare': str(estimated_fare),
+        'distance': distance,
+        'duration': duration,
+        'vehicle_type': vehicle_type.name,
+        'is_shared': is_shared
+    })
+
+def get_available_drivers(request):
+    """Récupérer les chauffeurs disponibles (API)"""
+    try:
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Coordonnées invalides'}, status=400)
+
+    point = Point(lng, lat, srid=4326)
+
+    # Trouver les chauffeurs disponibles dans un rayon de 10km
+    drivers = Driver.objects.filter(
+        is_available=True,
+        is_verified=True,
+        current_location__isnull=False
+    ).annotate(
+        distance=Distance('current_location', point)
+    ).filter(
+        distance__lt=10000  # 10km
+    ).select_related('user', 'vehicle_type').order_by('distance')[:20]
+
+    data = []
+    for driver in drivers:
+        data.append({
+            'id': driver.id,
+            'name': f"{driver.user.first_name} {driver.user.last_name}",
+            'vehicle_type': driver.vehicle_type.name if driver.vehicle_type else None,
+            'rating': float(driver.rating) if driver.rating else None,
+            'distance': float(driver.distance.m) if driver.distance else None,
+            'lat': driver.current_location.y if driver.current_location else None,
+            'lng': driver.current_location.x if driver.current_location else None,
+        })
+
+    return JsonResponse({'drivers': data})
+
+def get_nearby_drivers(request):
+    """Récupérer les chauffeurs à proximité (API)"""
+    try:
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+        radius = int(request.GET.get('radius', 5000))  # 5km par défaut
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Paramètres invalides'}, status=400)
+
+    point = Point(lng, lat, srid=4326)
+
+    # Trouver les chauffeurs à proximité
+    drivers = Driver.objects.filter(
+        current_location__isnull=False
+    ).annotate(
+        distance=Distance('current_location', point)
+    ).filter(
+        distance__lt=radius
+    ).select_related('user', 'vehicle_type').order_by('distance')[:50]
+
+    data = []
+    for driver in drivers:
+        data.append({
+            'id': driver.id,
+            'name': f"{driver.user.first_name} {driver.user.last_name}",
+            'vehicle_type': driver.vehicle_type.name if driver.vehicle_type else None,
+            'rating': float(driver.rating) if driver.rating else None,
+            'distance': float(driver.distance.m) if driver.distance else None,
+            'is_available': driver.is_available,
+            'is_verified': driver.is_verified,
+            'lat': driver.current_location.y if driver.current_location else None,
+            'lng': driver.current_location.x if driver.current_location else None,
+        })
+
+    return JsonResponse({'drivers': data})

@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.core.exceptions import ValidationError
+from django.db import models
 import json
 
 from .forms import (
@@ -133,8 +134,35 @@ def change_password(request):
             return redirect('profile')
     else:
         form = PasswordChangeForm(request.user)
-    
+
     return render(request, 'accounts/change_password.html', {'form': form})
+
+@csrf_exempt
+@login_required
+def update_profile(request):
+    """Mettre à jour le profil utilisateur (API)"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            form = UserProfileForm(data, request.FILES, instance=request.user)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Profil mis à jour avec succès.'
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'errors': form.errors
+                }, status=400)
+        except (ValueError, KeyError, json.JSONDecodeError) as e:
+            return JsonResponse({
+                'success': False,
+                'error': 'Données invalides.'
+            }, status=400)
+
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 @unauthenticated_user
 def verify_email(request, token):
