@@ -84,19 +84,21 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ('first_name', 'last_name', 'phone', 'birth_date', 'gender', 
-                 'address', 'city', 'country', 'profile_picture')
+                 'address', 'city', 'country', 'profile_picture', 'language', 'currency')
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-input'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-input'}),
-            'phone': forms.TextInput(attrs={'class': 'form-input'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Prénom'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Nom'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input', 'placeholder': '6XXXXXXXX'}),
             'birth_date': forms.DateInput(
                 attrs={'class': 'form-input', 'type': 'date'}
             ),
             'gender': forms.Select(attrs={'class': 'form-input'}),
-            'address': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
-            'city': forms.TextInput(attrs={'class': 'form-input'}),
-            'country': forms.TextInput(attrs={'class': 'form-input'}),
+            'address': forms.Textarea(attrs={'class': 'form-input', 'rows': 3, 'placeholder': 'Adresse complète'}),
+            'city': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ville'}),
+            'country': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Pays'}),
             'profile_picture': forms.FileInput(attrs={'class': 'form-input'}),
+            'language': forms.Select(attrs={'class': 'form-input'}),
+            'currency': forms.Select(attrs={'class': 'form-input'}),
         }
 
 class DriverRegistrationForm(forms.ModelForm):

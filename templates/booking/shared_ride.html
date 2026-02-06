@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}Covoiturage - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-6xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Covoiturage MoveNow</h1>
+            <p class="text-gray-600 mt-2">Partagez vos courses et économisez jusqu'à 30%</p>
+        </div>
+
+        <!-- How It Works -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Comment fonctionne le covoiturage?</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-route text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">1.-activez le covoiturage</h3>
+                    <p class="text-gray-600 text-sm">Cochez l'option covoiturage lors de votre réservation</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">2.Trouvez des passagers</h3>
+                    <p class="text-gray-600 text-sm">Nous vous mettons en relation avec des passagers sur votre trajet</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-percentage text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-800 mb-2">3.Économisez 30%</h3>
+                    <p class="text-gray-600 text-sm">Bénéficiez d'une réduction sur votre course</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Shared Trips -->
+        {% if shared_trips %}
+        <div class="mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Courses avec covoiturage disponibles</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for trip in shared_trips %}
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-users text-green-500"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-800">{{ trip.route_name }}</p>
+                                <p class="text-sm text-gray-500">{{ trip.date|date:"d/m/Y" }} à {{ trip.time|time:"H:i" }}</p>
+                            </div>
+                        </div>
+                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">{{ trip.available_seats }} places</span>
+                    </div>
+                    
+                    <div class="flex items-center text-sm text-gray-600 mb-4">
+                        <i class="fas fa-map-marker-alt text-green-500 mr-2"></i>
+                        {{ trip.origin }}
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600 mb-4">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-2"></i>
+                        {{ trip.destination }}
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-gray-500 text-sm">Prix par personne:</span>
+                            <span class="font-bold text-green-600">{{ trip.price_per_person|floatformat:0 }} XAF</span>
+                        </div>
+                        <button class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition">
+                            <i class="fas fa-plus mr-1"></i>Rejoindre
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Benefits -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Avantages du covoiturage</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-coins text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Économies</h3>
+                        <p class="text-gray-600 text-sm">Jusqu'à 30% de réduction sur vos courses</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-leaf text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Écologique</h3>
+                        <p class="text-gray-600 text-sm">Réduisez votre empreinte carbone</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-user-friends text-purple-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Rencontres</h3>
+                        <p class="text-gray-600 text-sm">Faites de nouvelles rencontres</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-car text-orange-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Moins de trafic</h3>
+                        <p class="text-gray-600 text-sm">Contribuez à fluidifier le trafic</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Savings Calculator -->
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white mb-8">
+            <h2 class="text-xl font-bold mb-6">Calculez vos économies</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm mb-2">Nombre de trajets/semaine</label>
+                    <input type="number" value="5" class="w-full px-4 py-2 rounded-lg text-gray-800" id="weekly-trips">
+                </div>
+                <div>
+                    <label class="block text-sm mb-2">Trajet moyen (XAF)</label>
+                    <input type="number" value="2000" class="w-full px-4 py-2 rounded-lg text-gray-800" id="avg-fare">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="calculateSavings()" class="w-full bg-white text-orange-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition">
+                        Calculer
+                    </button>
+                </div>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-white/20">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div>
+                        <p class="text-3xl font-bold" id="weekly-savings">9,000 XAF</p>
+                        <p class="text-sm opacity-80">Économies/semaine</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold" id="monthly-savings">36,000 XAF</p>
+                        <p class="text-sm opacity-80">Économies/mois</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold" id="yearly-savings">432,000 XAF</p>
+                        <p class="text-sm opacity-80">Économies/an</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Conseils pour un bon covoiturage</h2>
+            
+            <div class="space-y-4">
+                <div class="flex items-start space-x-4">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-clock text-green-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">Soyez à l'heure</h3>
+                        <p class="text-gray-600 text-sm">Respectez les horaires convenus pour ne pas faire attendre les autres passagers.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-comment text-green-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">Communiquez</h3>
+                        <p class="text-gray-600 text-sm">N'hésitez pas à discuter, le covoiturage est aussi une occasion de rencontres.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-smile text-green-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">Restez courtois</h3>
+                        <p class="text-gray-600 text-sm">Le respect mutuel est la clé d'un bon covoiturage.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-star text-green-500 text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-medium text-gray-800">Évaluez</h3>
+                        <p class="text-gray-600 text-sm">Laissez une évaluation pour aider la communauté.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function calculateSavings() {
+    const tripsPerWeek = parseInt(document.getElementById('weekly-trips').value) || 0;
+    const avgFare = parseInt(document.getElementById('avg-fare').value) || 0;
+    
+    // 30% discount for carpooling
+    const weeklySavings = Math.round(tripsPerWeek * avgFare * 0.30);
+    const monthlySavings = weeklySavings * 4;
+    const yearlySavings = monthlySavings * 12;
+    
+    // Animate the numbers
+    animateValue('weekly-savings', weeklySavings);
+    animateValue('monthly-savings', monthlySavings);
+    animateValue('yearly-savings', yearlySavings);
+}
+
+function animateValue(elementId, endValue) {
+    const element = document.getElementById(elementId);
+    const duration = 1000;
+    const startValue = 0;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        const currentValue = Math.round(startValue + (endValue - startValue) * progress);
+        element.textContent = currentValue.toLocaleString() + ' XAF';
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Calculate on load
+document.addEventListener('DOMContentLoaded', calculateSavings);
+</script>
+{% endblock %}
+

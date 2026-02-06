@@ -317,36 +317,70 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize map if available
-    if (typeof mapboxgl !== 'undefined') {
-        mapboxgl.accessToken = '{{ mapbox_access_token|default:"pk.eyJ1IjoibW92ZW5vdyIsImEiOiJjbHZkZW5nYm8wMHk0MmpzZzZ3b3E1aGR4In0.example" }}';
-
-        const map = new mapboxgl.Map({
-            container: 'trip-map',
-            style: 'mapbox://styles/mapbox/streets-v11',
-            center: [9.7678, 4.0511], // Douala coordinates
-            zoom: 12
-        });
-
-        // Add markers for pickup and dropoff
-        {% if trip.pickup_location %}
-        const pickupCoords = '{{ trip.pickup_location }}'.split(',');
-        if (pickupCoords.length === 2) {
-            new mapboxgl.Marker({ color: '#10b981' })
-                .setLngLat([parseFloat(pickupCoords[1]), parseFloat(pickupCoords[0])])
-                .addTo(map);
-        }
-        {% endif %}
-
-        {% if trip.dropoff_location %}
-        const dropoffCoords = '{{ trip.dropoff_location }}'.split(',');
-        if (dropoffCoords.length === 2) {
-            new mapboxgl.Marker({ color: '#ef4444' })
-                .setLngLat([parseFloat(dropoffCoords[1]), parseFloat(dropoffCoords[0])])
-                .addTo(map);
-        }
-        {% endif %}
+    // Listen for Google Maps API loaded event
+    document.addEventListener('googleMapsLoaded', initTripMap);
+    
+    // Check if Google Maps is already loaded
+    if (typeof google !== 'undefined' && google.maps) {
+        setTimeout(initTripMap, 100);
     }
 });
+
+function initTripMap() {
+    const mapElement = document.getElementById('trip-map');
+    if (!mapElement || typeof google === 'undefined') return;
+    
+    // Initialize map centered on Douala
+    const doualaCenter = { lat: 4.0511, lng: 9.7678 };
+    const map = new google.maps.Map(mapElement, {
+        center: doualaCenter,
+        zoom: 12,
+        mapTypeControl: false,
+        fullscreenControl: true,
+        streetViewControl: false,
+        zoomControl: true
+    });
+    
+    // Add markers for pickup and dropoff
+    {% if trip.pickup_location %}
+    const pickupCoords = '{{ trip.pickup_location }}'.split(',');
+    if (pickupCoords.length === 2) {
+        const pickupLat = parseFloat(pickupCoords[0]);
+        const pickupLng = parseFloat(pickupCoords[1]);
+        
+        new google.maps.Marker({
+            position: { lat: pickupLat, lng: pickupLng },
+            map: map,
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                scaledSize: new google.maps.Size(32, 32),
+                anchor: new google.maps.Point(16, 32)
+            },
+            title: 'Point de départ'
+        });
+        
+        map.setCenter({ lat: pickupLat, lng: pickupLng });
+    }
+    {% endif %}
+    
+    {% if trip.dropoff_location %}
+    const dropoffCoords = '{{ trip.dropoff_location }}'.split(',');
+    if (dropoffCoords.length === 2) {
+        const dropoffLat = parseFloat(dropoffCoords[0]);
+        const dropoffLng = parseFloat(dropoffCoords[1]);
+        
+        new google.maps.Marker({
+            position: { lat: dropoffLat, lng: dropoffLng },
+            map: map,
+            icon: {
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+                scaledSize: new google.maps.Size(32, 32),
+                anchor: new google.maps.Point(16, 32)
+            },
+            title: 'Destination'
+        });
+    }
+    {% endif %}
+}
 </script>
 {% endblock %}

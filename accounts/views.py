@@ -89,39 +89,7 @@ def logout_view(request):
     """Déconnexion utilisateur"""
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
-    return redirect('home')
-
-@login_required
-def profile(request):
-    """Profil utilisateur"""
-    user = request.user
-    
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profil mis à jour avec succès.")
-            return redirect('profile')
-    else:
-        form = UserProfileForm(instance=user)
-    
-    # Statistiques
-    stats = {
-        'total_trips': user.trips.count(),
-        'completed_trips': user.trips.filter(status='completed').count(),
-        'avg_rating': user.given_ratings.aggregate(
-            avg=models.Avg('rating')
-        )['avg'] or 0,
-    }
-    
-    context = {
-        'form': form,
-        'stats': stats,
-        'wallet': user.wallet,
-        'settings': user.settings,
-    }
-    
-    return render(request, 'accounts/profile.html', context)
+    return render(request, 'accounts/logout.html')
 
 @login_required
 def change_password(request):
@@ -131,7 +99,7 @@ def change_password(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Mot de passe changé avec succès.")
-            return redirect('profile')
+            return redirect('home')
     else:
         form = PasswordChangeForm(request.user)
 
@@ -346,3 +314,30 @@ def update_location(request):
             return JsonResponse({'success': False, 'error': str(e)})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def profile(request):
+    """Page de profil utilisateur"""
+    user = request.user
+    
+    if request.method == 'POST':
+        # Mettre à jour le profil
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.phone = request.POST.get('phone', user.phone)
+        user.address = request.POST.get('address', user.address)
+        user.save()
+        
+        messages.success(request, "Profil mis à jour avec succès.")
+        return redirect('accounts:profile')
+    
+    # Récupérer le portefeuille
+    wallet = getattr(user, 'wallet', None)
+    
+    context = {
+        'user': user,
+        'wallet': wallet,
+    }
+    
+    return render(request, 'accounts/profile.html', context)

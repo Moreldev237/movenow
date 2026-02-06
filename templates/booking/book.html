@@ -31,12 +31,22 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Type de véhicule</label>
                             <div class="grid grid-cols-2 gap-3">
-                                {% for choice in form.vehicle_type %}
+                                {% for vehicle_type in vehicle_types %}
                                 <label class="cursor-pointer">
-                                    {{ choice.tag }}
-                                    <span class="flex items-center p-3 border rounded-lg hover:border-orange-500 transition has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50">
-                                        <i class="fas fa-motorcycle text-orange-500 mr-2"></i>
-                                        <span class="text-sm font-medium">{{ choice.choice_label }}</span>
+                                    <input type="radio" name="vehicle_type" value="{{ vehicle_type.id }}" class="sr-only" data-base-price="{{ vehicle_type.base_price }}" data-price-per-km="{{ vehicle_type.price_per_km }}" {% if forloop.first %}checked{% endif %}>
+                                    <span class="flex items-center p-3 border rounded-lg hover:border-orange-500 transition peer-checked:border-orange-500 peer-checked:bg-orange-50">
+                                        {% if vehicle_type.name == 'moto' %}
+                                            <i class="fas fa-motorcycle text-orange-500 mr-2"></i>
+                                        {% elif vehicle_type.name == 'taxi' %}
+                                            <i class="fas fa-taxi text-orange-500 mr-2"></i>
+                                        {% elif vehicle_type.name == 'van' %}
+                                            <i class="fas fa-shuttle-van text-orange-500 mr-2"></i>
+                                        {% elif vehicle_type.name == 'vip' %}
+                                            <i class="fas fa-car text-orange-500 mr-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-car text-orange-500 mr-2"></i>
+                                        {% endif %}
+                                        <span class="text-sm font-medium">{{ vehicle_type.get_name_display }}</span>
                                     </span>
                                 </label>
                                 {% endfor %}
@@ -49,11 +59,18 @@
                                 <i class="fas fa-map-marker-alt text-green-500 mr-1"></i>
                                 Point de départ
                             </label>
-                            <div class="relative">
+                            <div class="address-input-wrapper">
                                 {{ form.pickup_address }}
-                                <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-orange-500" onclick="useCurrentLocation()">
+                                <button type="button" onclick="useCurrentLocation()" title="Utiliser ma position actuelle" id="location-btn-pickup">
                                     <i class="fas fa-crosshairs"></i>
                                 </button>
+                            </div>
+                            <!-- Pickup status indicator -->
+                            <div id="pickup-status" class="hidden mt-1">
+                                <span class="text-xs text-green-600 flex items-center">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    <span id="pickup-status-text">Position définie</span>
+                                </span>
                             </div>
                             {{ form.pickup_lat }}
                             {{ form.pickup_lng }}
@@ -66,8 +83,27 @@
                                 Destination
                             </label>
                             {{ form.dropoff_address }}
+                            <!-- Dropoff status indicator -->
+                            <div id="dropoff-status" class="hidden mt-1">
+                                <span class="text-xs text-red-600 flex items-center">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    <span id="dropoff-status-text">Destination définie</span>
+                                </span>
+                            </div>
                             {{ form.dropoff_lat }}
                             {{ form.dropoff_lng }}
+                        </div>
+                        
+                        <!-- Quick Actions -->
+                        <div class="flex gap-2 text-sm">
+                            <button type="button" onclick="swapLocations()" class="flex items-center text-gray-500 hover:text-orange-500 transition" id="swap-btn">
+                                <i class="fas fa-exchange-alt mr-1"></i>
+                                Échanger les points
+                            </button>
+                            <button type="button" onclick="clearLocations()" class="flex items-center text-gray-500 hover:text-red-500 transition">
+                                <i class="fas fa-trash-alt mr-1"></i>
+                                Effacer
+                            </button>
                         </div>
                         
                         <!-- Shared Ride Option -->
@@ -160,6 +196,155 @@
     input[type="checkbox"][name="vehicle_type"] {
         display: none;
     }
+    
+    /* Google Maps custom styles */
+    #booking-map {
+        width: 100%;
+        height: 500px;
+    }
+    
+    .gm-style-iw {
+        padding: 12px !important;
+    }
+    
+    .gm-style-iw h4 {
+        margin: 0 0 8px 0;
+        font-weight: 600;
+    }
+    
+    /* Address input wrapper with location button */
+    .address-input-wrapper {
+        position: relative;
+    }
+    
+    .address-input-wrapper button {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 4px;
+        transition: color 0.2s;
+    }
+    
+    .address-input-wrapper button:hover {
+        color: #f97316;
+    }
+    
+    /* Loading spinner for geolocation */
+    .location-loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f97316;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Map controls */
+    .map-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .map-control-btn {
+        background: white;
+        border: none;
+        border-radius: 4px;
+        padding: 8px;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transition: background 0.2s;
+    }
+    
+    .map-control-btn:hover {
+        background: #f3f4f6;
+    }
+    
+    /* Route info panel */
+    .route-info {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .route-info-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+    
+    .route-info-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+    
+    .route-start {
+        background: #22c55e;
+        color: white;
+    }
+    
+    .route-end {
+        background: #ef4444;
+        color: white;
+    }
+    
+    .route-line {
+        width: 2px;
+        height: 20px;
+        background: #d1d5db;
+        margin-left: 11px;
+    }
+    
+    /* Status messages */
+    .status-message {
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 14px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .status-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+    
+    .status-error {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+    
+    .status-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+    }
 </style>
 {% endblock %}
 
@@ -167,191 +352,619 @@
 <script>
     let map;
     let pickupMarker, dropoffMarker;
-    let routeLayer;
+    let directionsService;
+    let directionsRenderer;
+    let pickupAutocomplete, dropoffAutocomplete;
     
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize map
-        mapboxgl.accessToken = '{{ mapbox_access_token|default:"pk.eyJ1IjoibW92ZW5vdyIsImEiOiJjbHZkZW5nYm8wMHk0MmpzZzZ3b3E1aGR4In0.example" }}';
-        
-        map = new mapboxgl.Map({
-            container: 'booking-map',
-            style: 'mapbox://styles/mapbox/streets-v12',
-            center: [9.7678, 4.0511], // Douala
-            zoom: 13
+        // Listen for Google Maps API loaded event
+        document.addEventListener('googleMapsLoaded', function() {
+            initMap();
         });
         
-        // Add navigation controls
-        map.addControl(new mapboxgl.NavigationControl());
-        
-        // Add click handler for map
-        map.on('click', handleMapClick);
-        
-        // Form input handlers
-        document.getElementById('id_pickup_address').addEventListener('change', handleAddressChange);
-        document.getElementById('id_dropoff_address').addEventListener('change', handleAddressChange);
-        document.querySelector('input[name="vehicle_type"]').addEventListener('change', calculateFare);
+        // Check if Google Maps is already loaded
+        if (typeof google !== 'undefined' && google.maps) {
+            // Small delay to ensure DOM is ready
+            setTimeout(initMap, 100);
+        }
     });
     
+    function initMap() {
+        // Initialize Google Maps
+        const doualaCenter = { lat: 4.0333, lng: 9.7167 };
+        
+        map = new google.maps.Map(document.getElementById('booking-map'), {
+            center: doualaCenter,
+            zoom: 15,
+            mapTypeControl: false,
+            fullscreenControl: true,
+            streetViewControl: false,
+            zoomControl: true,
+            styles: [
+                {
+                    featureType: "poi",
+                    elementType: "labels",
+                    stylers: [{ visibility: "off" }]
+                }
+            ]
+        });
+        
+        // Initialize Directions service and renderer
+        directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer({
+            map: map,
+            suppressMarkers: true,
+            polylineOptions: {
+                strokeColor: '#f97316',
+                strokeWeight: 5,
+                strokeOpacity: 0.8
+            }
+        });
+        
+        // Add click handler for map
+        map.addListener('click', handleMapClick);
+        
+        // Initialize autocomplete for address inputs
+        initAutocomplete();
+        
+        // Form input handlers
+        document.getElementById('id_pickup_address').addEventListener('input', debounce(handleAddressInput, 300));
+        document.getElementById('id_dropoff_address').addEventListener('input', debounce(handleAddressInput, 300));
+        
+        document.querySelectorAll('input[name="vehicle_type"]').forEach(input => {
+            input.addEventListener('change', function() {
+                if (pickupMarker && dropoffMarker) {
+                    calculateRoute();
+                }
+            });
+        });
+        
+        // Shared ride checkbox handler
+        document.getElementById('is_shared').addEventListener('change', function() {
+            if (pickupMarker && dropoffMarker) {
+                calculateFare();
+            }
+        });
+    }
+    
+    function initAutocomplete() {
+        const pickupInput = document.getElementById('id_pickup_address');
+        const dropoffInput = document.getElementById('id_dropoff_address');
+        
+        if (typeof google !== 'undefined' && google.maps.places) {
+            pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'cm' },
+                fields: ['geometry', 'formatted_address'],
+                strictBounds: false
+            });
+            
+            dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'cm' },
+                fields: ['geometry', 'formatted_address'],
+                strictBounds: false
+            });
+            
+            pickupAutocomplete.addListener('place_changed', function() {
+                const place = pickupAutocomplete.getPlace();
+                if (place.geometry) {
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    
+                    document.getElementById('id_pickup_lat').value = lat;
+                    document.getElementById('id_pickup_lng').value = lng;
+                    
+                    setPickup(lat, lng);
+                    showPickupStatus(true, 'Adresse sélectionnée');
+                    
+                    if (!dropoffMarker) {
+                        map.setCenter({ lat, lng });
+                    }
+                }
+            });
+            
+            dropoffAutocomplete.addListener('place_changed', function() {
+                const place = dropoffAutocomplete.getPlace();
+                if (place.geometry) {
+                    const lat = place.geometry.location.lat();
+                    const lng = place.geometry.location.lng();
+                    
+                    document.getElementById('id_dropoff_lat').value = lat;
+                    document.getElementById('id_dropoff_lng').value = lng;
+                    
+                    setDropoff(lat, lng);
+                    showDropoffStatus(true, 'Destination sélectionnée');
+                    
+                    if (!pickupMarker) {
+                        map.setCenter({ lat, lng });
+                    }
+                }
+            });
+            
+            // Add styling to autocomplete dropdown
+            setupAutocompleteStyle();
+        }
+    }
+    
+    function setupAutocompleteStyle() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .pac-container {
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                font-family: inherit;
+            }
+            .pac-item {
+                padding: 8px 12px;
+                border-top: none;
+            }
+            .pac-item:first-child {
+                border-top: none;
+            }
+            .pac-item:hover {
+                background-color: #fff7ed;
+            }
+            .pac-icon {
+                display: none;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
     function handleMapClick(e) {
-        const { lng, lat } = e.lngLat;
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
         
         // Determine if setting pickup or dropoff
         if (!pickupMarker) {
-            setPickup(lng, lat);
+            setPickup(lat, lng);
+            showPickupStatus(true, 'Position définie sur la carte');
         } else if (!dropoffMarker) {
-            setDropoff(lng, lat);
+            setDropoff(lat, lng);
+            showDropoffStatus(true, 'Destination définie sur la carte');
             calculateRoute();
         } else {
             // Reset and set new pickup
             removeMarkers();
-            setPickup(lng, lat);
+            setPickup(lat, lng);
+            showPickupStatus(true, 'Position définie sur la carte');
         }
     }
     
-    function setPickup(lng, lat) {
-        if (pickupMarker) pickupMarker.remove();
+    function setPickup(lat, lng, address = null) {
+        // Remove existing pickup marker
+        if (pickupMarker) {
+            pickupMarker.setMap(null);
+        }
         
-        pickupMarker = new mapboxgl.Marker({ color: '#22c55e' })
-            .setLngLat([lng, lat])
-            .setPopup(new mapboxgl.Popup().setHTML('<b>Point de départ</b>'))
-            .addTo(map);
+        // Create new pickup marker with animation
+        pickupMarker = new google.maps.Marker({
+            position: { lat, lng },
+            map: map,
+            icon: {
+                url: getMarkerIcon('green'),
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 40)
+            },
+            title: 'Point de départ',
+            animation: google.maps.Animation.DROP
+        });
         
+        // Add info window with address if available
+        const addressText = address || document.getElementById('id_pickup_address').value || 'Point de départ';
+        pickupMarker.infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="padding: 8px; min-width: 150px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
+                        <b>Point de départ</b>
+                    </div>
+                    <p style="margin: 8px 0 0 20px; font-size: 13px; color: #666;">${addressText}</p>
+                </div>
+            `
+        });
+        
+        // Open info window after marker is placed
+        setTimeout(() => {
+            if (pickupMarker) {
+                pickupMarker.infoWindow.open(map, pickupMarker);
+            }
+        }, 300);
+        
+        // Update form fields
         document.getElementById('id_pickup_lat').value = lat;
         document.getElementById('id_pickup_lng').value = lng;
         
-        // Reverse geocode
-        reverseGeocode(lng, lat, 'id_pickup_address');
-        calculateRoute();
+        // Reverse geocode if address not set
+        const addressInput = document.getElementById('id_pickup_address');
+        if (!addressInput.value || addressInput.value.trim() === '') {
+            reverseGeocode(lat, lng, 'id_pickup_address', function(address) {
+                if (address && pickupMarker) {
+                    pickupMarker.infoWindow.setContent(`
+                        <div style="padding: 8px; min-width: 150px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
+                                <b>Point de départ</b>
+                            </div>
+                            <p style="margin: 8px 0 0 20px; font-size: 13px; color: #666;">${address}</p>
+                        </div>
+                    `);
+                }
+            });
+        }
+        
+        // Calculate route if dropoff exists
+        if (dropoffMarker) {
+            calculateRoute();
+        }
+        
+        map.panTo({ lat, lng });
     }
     
-    function setDropoff(lng, lat) {
-        if (dropoffMarker) dropoffMarker.remove();
+    function setDropoff(lat, lng, address = null) {
+        // Remove existing dropoff marker
+        if (dropoffMarker) {
+            dropoffMarker.setMap(null);
+        }
         
-        dropoffMarker = new mapboxgl.Marker({ color: '#ef4444' })
-            .setLngLat([lng, lat])
-            .setPopup(new mapboxgl.Popup().setHTML('<b>Destination</b>'))
-            .addTo(map);
+        // Create new dropoff marker with animation
+        dropoffMarker = new google.maps.Marker({
+            position: { lat, lng },
+            map: map,
+            icon: {
+                url: getMarkerIcon('red'),
+                scaledSize: new google.maps.Size(40, 40),
+                anchor: new google.maps.Point(20, 40)
+            },
+            title: 'Destination',
+            animation: google.maps.Animation.DROP
+        });
         
+        // Add info window with address if available
+        const addressText = address || document.getElementById('id_dropoff_address').value || 'Destination';
+        dropoffMarker.infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="padding: 8px; min-width: 150px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%;"></div>
+                        <b>Destination</b>
+                    </div>
+                    <p style="margin: 8px 0 0 20px; font-size: 13px; color: #666;">${addressText}</p>
+                </div>
+            `
+        });
+        
+        // Open info window after marker is placed
+        setTimeout(() => {
+            if (dropoffMarker) {
+                dropoffMarker.infoWindow.open(map, dropoffMarker);
+            }
+        }, 300);
+        
+        // Update form fields
         document.getElementById('id_dropoff_lat').value = lat;
         document.getElementById('id_dropoff_lng').value = lng;
         
-        // Reverse geocode
-        reverseGeocode(lng, lat, 'id_dropoff_address');
+        // Reverse geocode if address not set
+        const addressInput = document.getElementById('id_dropoff_address');
+        if (!addressInput.value || addressInput.value.trim() === '') {
+            reverseGeocode(lat, lng, 'id_dropoff_address', function(address) {
+                if (address && dropoffMarker) {
+                    dropoffMarker.infoWindow.setContent(`
+                        <div style="padding: 8px; min-width: 150px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%;"></div>
+                                <b>Destination</b>
+                            </div>
+                            <p style="margin: 8px 0 0 20px; font-size: 13px; color: #666;">${address}</p>
+                        </div>
+                    `);
+                }
+            });
+        }
+        
+        // Calculate route
         calculateRoute();
+        
+        map.panTo({ lat, lng });
+    }
+    
+    function getMarkerIcon(color) {
+        // Create SVG marker icons inline
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 36" width="40" height="40">
+                <path fill="${color === 'green' ? '#22c55e' : '#ef4444'}" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z"/>
+                <circle fill="white" cx="12" cy="10" r="5"/>
+            </svg>
+        `;
+        return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
     }
     
     function removeMarkers() {
-        if (pickupMarker) pickupMarker.remove();
-        if (dropoffMarker) dropoffMarker.remove();
-        pickupMarker = null;
-        dropoffMarker = null;
+        if (pickupMarker) {
+            pickupMarker.setMap(null);
+            pickupMarker = null;
+        }
+        if (dropoffMarker) {
+            dropoffMarker.setMap(null);
+            dropoffMarker = null;
+        }
+        
+        // Clear route
+        if (directionsRenderer) {
+            directionsRenderer.setDirections({ routes: [] });
+        }
+        
+        // Reset fare display
+        document.getElementById('estimated-distance').textContent = '-- km';
+        document.getElementById('estimated-duration').textContent = '-- min';
+        document.getElementById('estimated-fare').textContent = '-- XAF';
+        
+        // Hide status indicators
+        document.getElementById('pickup-status').classList.add('hidden');
+        document.getElementById('dropoff-status').classList.add('hidden');
     }
     
-    function reverseGeocode(lng, lat, inputId) {
-        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`;
+    function reverseGeocode(lat, lng, inputId, callback) {
+        const geocoder = new google.maps.Geocoder();
+        const latlng = { lat, lng };
         
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.features && data.features.length > 0) {
-                    document.getElementById(inputId).value = data.features[0].place_name;
+        geocoder.geocode({ location: latlng }, function(results, status) {
+            if (status === 'OK') {
+                if (results[0]) {
+                    const address = results[0].formatted_address;
+                    document.getElementById(inputId).value = address;
+                    if (callback) callback(address);
                 }
-            })
-            .catch(error => console.error('Geocoding error:', error));
+            } else {
+                console.warn('Geocoder failed due to: ' + status);
+            }
+        });
     }
     
     function calculateRoute() {
         if (!pickupMarker || !dropoffMarker) return;
         
-        const pickup = pickupMarker.getLngLat();
-        const dropoff = dropoffMarker.getLngLat();
+        // Show loading state
+        document.getElementById('estimated-distance').innerHTML = '<span class="loading-spinner"></span>';
+        document.getElementById('estimated-duration').innerHTML = '<span class="loading-spinner"></span>';
         
-        const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${pickup.lng},${pickup.lat};${dropoff.lng},${dropoff.lat}?geometries=geojson&access_token=${mapboxgl.accessToken}`;
+        const origin = pickupMarker.getPosition();
+        const destination = dropoffMarker.getPosition();
         
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.routes && data.routes.length > 0) {
-                    const route = data.routes[0];
-                    
-                    // Update map with route
-                    if (routeLayer) map.removeLayer(routeLayer);
-                    if (map.getSource('route')) map.removeSource('route');
-                    
-                    map.addSource('route', {
-                        'type': 'geojson',
-                        'data': {
-                            'type': 'Feature',
-                            'properties': {},
-                            'geometry': route.geometry
-                        }
-                    });
-                    
-                    map.addLayer({
-                        'id': 'route',
-                        'type': 'line',
-                        'source': 'route',
-                        'layout': {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        'paint': {
-                            'line-color': '#f97316',
-                            'line-width': 4
-                        }
-                    });
-                    
-                    // Update fare estimate
-                    const distance = (route.distance / 1000).toFixed(1);
-                    const duration = Math.round(route.duration / 60);
-                    
-                    document.getElementById('estimated-distance').textContent = `${distance} km`;
-                    document.getElementById('estimated-duration').textContent = `${duration} min`;
-                    
-                    calculateFare(distance, duration);
-                }
-            })
-            .catch(error => console.error('Routing error:', error));
+        const request = {
+            origin: origin,
+            destination: destination,
+            travelMode: google.maps.TravelMode.DRIVING,
+            provideRouteAlternatives: false,
+            optimizeWaypoints: false,
+            drivingOptions: {
+                departureTime: new Date(),
+                trafficModel: 'best_guess'
+            }
+        };
+        
+        directionsService.route(request, function(response, status) {
+            if (status === 'OK') {
+                // Display route
+                directionsRenderer.setDirections(response);
+                
+                // Extract route info
+                const route = response.routes[0];
+                const leg = route.legs[0];
+                
+                const distance = (leg.distance.value / 1000).toFixed(1); // km
+                const duration = Math.round(leg.duration.value / 60); // minutes
+                
+                // Update fare estimate
+                document.getElementById('estimated-distance').textContent = distance + ' km';
+                document.getElementById('estimated-duration').textContent = duration + ' min';
+                
+                calculateFare(distance, duration);
+            } else {
+                console.error('Directions request failed due to: ' + status);
+                // Reset to default state
+                document.getElementById('estimated-distance').textContent = '-- km';
+                document.getElementById('estimated-duration').textContent = '-- min';
+            }
+        });
     }
     
     function calculateFare(distance, duration) {
-        // Get vehicle type base price
-        const vehicleTypeSelect = document.querySelector('input[name="vehicle_type"]:checked');
-        const basePrice = vehicleTypeSelect ? parseFloat(vehicleTypeSelect.dataset.basePrice) || 500 : 500;
-        const pricePerKm = vehicleTypeSelect ? parseFloat(vehicleTypeSelect.dataset.pricePerKm) || 300 : 300;
-        
+        // Get selected vehicle type
+        const vehicleTypeInput = document.querySelector('input[name="vehicle_type"]:checked');
+        const basePrice = vehicleTypeInput ? parseFloat(vehicleTypeInput.dataset.basePrice) || 500 : 500;
+        const pricePerKm = vehicleTypeInput ? parseFloat(vehicleTypeInput.dataset.pricePerKm) || 300 : 300;
+
         const dist = distance || 0;
-        const dur = duration || 0;
-        
+
         // Calculate fare
         const fare = basePrice + (pricePerKm * dist);
-        
+
         // Check shared ride
         const isShared = document.getElementById('is_shared').checked;
         const finalFare = isShared ? fare * 0.7 : fare;
-        
-        document.getElementById('estimated-fare').textContent = `${Math.round(finalFare)} XAF`;
+
+        document.getElementById('estimated-fare').textContent = Math.round(finalFare) + ' XAF';
     }
     
     function useCurrentLocation() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                position => {
-                    const { latitude, longitude } = position.coords;
-                    map.flyTo({ center: [longitude, latitude], zoom: 15 });
-                    setPickup(longitude, latitude);
-                },
-                error => {
-                    alert('Impossible d\'obtenir votre position. Veuillez vérifier les permissions.');
-                }
-            );
-        } else {
+        if (!navigator.geolocation) {
             alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+            return;
+        }
+        
+        const btn = document.getElementById('location-btn-pickup');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<span class="location-loading"></span>';
+        
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const { latitude, longitude } = position.coords;
+                const pos = { lat: latitude, lng: longitude };
+                
+                map.setCenter(pos);
+                map.setZoom(15);
+                
+                setPickup(latitude, longitude);
+                showPickupStatus(true, 'Position actuelle');
+                
+                btn.innerHTML = originalContent;
+            },
+            error => {
+                btn.innerHTML = originalContent;
+                
+                let errorMessage = 'Impossible d\'obtenir votre position.';
+                if (error.code === error.PERMISSION_DENIED) {
+                    errorMessage = 'Permission de géolocalisation refusée. Veuillez autoriser l\'accès à votre position dans les paramètres du navigateur.';
+                } else if (error.code === error.TIMEOUT) {
+                    errorMessage = 'Timeout. La géolocalisation a pris trop de temps.';
+                }
+                
+                showPickupStatus(false, errorMessage);
+                console.error('Geolocation error:', error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    }
+    
+    function swapLocations() {
+        if (!pickupMarker || !dropoffMarker) {
+            return;
+        }
+        
+        // Get current values
+        const pickupLat = document.getElementById('id_pickup_lat').value;
+        const pickupLng = document.getElementById('id_pickup_lng').value;
+        const pickupAddr = document.getElementById('id_pickup_address').value;
+        
+        const dropoffLat = document.getElementById('id_dropoff_lat').value;
+        const dropoffLng = document.getElementById('id_dropoff_lng').value;
+        const dropoffAddr = document.getElementById('id_dropoff_address').value;
+        
+        // Swap values
+        document.getElementById('id_pickup_lat').value = dropoffLat;
+        document.getElementById('id_pickup_lng').value = dropoffLng;
+        document.getElementById('id_pickup_address').value = dropoffAddr;
+        
+        document.getElementById('id_dropoff_lat').value = pickupLat;
+        document.getElementById('id_dropoff_lng').value = pickupLng;
+        document.getElementById('id_dropoff_address').value = pickupAddr;
+        
+        // Swap markers
+        const pickupPos = pickupMarker.getPosition();
+        const dropoffPos = dropoffMarker.getPosition();
+        
+        setPickup(dropoffPos.lat(), dropoffPos.lng(), dropoffAddr);
+        setDropoff(pickupPos.lat(), pickupPos.lng(), pickupAddr);
+        
+        // Show feedback
+        showPickupStatus(true, 'Points échangés');
+        setTimeout(() => {
+            showPickupStatus(true, 'Position définie');
+        }, 2000);
+    }
+    
+    function clearLocations() {
+        // Clear form fields
+        document.getElementById('id_pickup_address').value = '';
+        document.getElementById('id_pickup_lat').value = '';
+        document.getElementById('id_pickup_lng').value = '';
+        
+        document.getElementById('id_dropoff_address').value = '';
+        document.getElementById('id_dropoff_lat').value = '';
+        document.getElementById('id_dropoff_lng').value = '';
+        
+        // Remove markers
+        removeMarkers();
+        
+        // Hide status indicators
+        document.getElementById('pickup-status').classList.add('hidden');
+        document.getElementById('dropoff-status').classList.add('hidden');
+    }
+    
+    function showPickupStatus(success, message) {
+        const statusEl = document.getElementById('pickup-status');
+        const textEl = document.getElementById('pickup-status-text');
+        
+        statusEl.classList.remove('hidden');
+        statusEl.querySelector('span').className = success 
+            ? 'text-xs text-green-600 flex items-center'
+            : 'text-xs text-red-600 flex items-center';
+        
+        textEl.innerHTML = `<i class="${success ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'} mr-1"></i>${message}`;
+        
+        if (success) {
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 3000);
         }
     }
     
-    function handleAddressChange(e) {
-        // Could implement autocomplete here
+    function showDropoffStatus(success, message) {
+        const statusEl = document.getElementById('dropoff-status');
+        const textEl = document.getElementById('dropoff-status-text');
+        
+        statusEl.classList.remove('hidden');
+        statusEl.querySelector('span').className = success 
+            ? 'text-xs text-green-600 flex items-center'
+            : 'text-xs text-red-600 flex items-center';
+        
+        textEl.innerHTML = `<i class="${success ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'} mr-1"></i>${message}`;
+        
+        if (success) {
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 3000);
+        }
+    }
+    
+    function handleAddressInput(e) {
+        const input = e.target;
+        const value = input.value.trim();
+        
+        // Clear marker if address is emptied
+        if (value === '') {
+            if (input.id === 'id_pickup_address') {
+                if (pickupMarker) {
+                    pickupMarker.setMap(null);
+                    pickupMarker = null;
+                }
+                document.getElementById('pickup-status').classList.add('hidden');
+            } else {
+                if (dropoffMarker) {
+                    dropoffMarker.setMap(null);
+                    dropoffMarker = null;
+                }
+                document.getElementById('dropoff-status').classList.add('hidden');
+            }
+            
+            // Clear route if either marker is missing
+            if (directionsRenderer) {
+                directionsRenderer.setDirections({ routes: [] });
+            }
+            document.getElementById('estimated-distance').textContent = '-- km';
+            document.getElementById('estimated-duration').textContent = '-- min';
+            document.getElementById('estimated-fare').textContent = '-- XAF';
+        }
+    }
+    
+    // Utility function for debouncing
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
 </script>
 {% endblock %}

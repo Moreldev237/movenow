@@ -137,7 +137,7 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = 'accounts.User'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-LOGIN_URL = '/accounts/login/'
+LOGIN_URL = '/auth/login/'
 
 # Allauth settings
 ACCOUNT_AUTHENTICATION_METHOD = 'email'

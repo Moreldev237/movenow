@@ -20,7 +20,7 @@ urlpatterns = [
     
     # Web
     path('', include('core.urls')),
-    path('accounts/', include('accounts.urls')),
+    path('accounts/', include('accounts.urls', namespace='accounts')),
     path('booking/', include('booking.urls')),
     path('payment/', include('payment.urls')),
     path('fleet/', include('fleet.urls')),
@@ -32,8 +32,8 @@ urlpatterns = [
     path('privacy/', TemplateView.as_view(template_name='core/privacy_policy.html'), name='privacy_policy'),
     path('terms/', TemplateView.as_view(template_name='core/terms.html'), name='terms'),
     
-    # Auth (Allauth)
-    path('accounts/', include('allauth.urls')),
+    # Auth (Allauth) - Commented out to avoid conflicts with custom accounts
+    # path('accounts/', include('allauth.urls')),
     
 ]
 

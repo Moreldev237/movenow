@@ -539,3 +539,16 @@ def get_nearby_drivers(request):
         })
 
     return JsonResponse({'drivers': data})
+
+
+def shared_ride(request):
+    """Page de covoiturage"""
+    # Récupérer les trajets avec covoiturage disponibles
+    shared_trips = []
+    
+    # Pour l'exemple, retourner des données fictives
+    context = {
+        'shared_trips': shared_trips,
+    }
+    
+    return render(request, 'booking/shared_ride.html', context)

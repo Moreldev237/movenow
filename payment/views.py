@@ -1,7 +1,8 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
 import json
 
 from .models import Payment, PaymentMethod, Refund
@@ -238,3 +239,34 @@ def get_payment_status(request, payment_id):
         'amount': str(payment.amount),
         'processed_at': payment.processed_at.isoformat() if payment.processed_at else None,
     })
+
+
+# ============ WEB VIEWS ============
+
+@login_required
+@passenger_required
+def payment_page(request, trip_id):
+    """Page de paiement pour une course"""
+    trip = get_object_or_404(
+        Trip,
+        id=trip_id,
+        passenger=request.user
+    )
+    
+    # Vérifier si le paiement est déjà effectué
+    if trip.payment_status == 'paid':
+        messages.info(request, 'Cette course a déjà été payée.')
+        return redirect('booking:trip_detail', trip_id=trip.id)
+    
+    # Récupérer les méthodes de paiement de l'utilisateur
+    payment_methods = PaymentMethod.objects.filter(
+        user=request.user,
+        is_active=True
+    )
+    
+    context = {
+        'trip': trip,
+        'payment_methods': payment_methods,
+    }
+    
+    return render(request, 'payment/payment.html', context)

@@ -1,0 +1,282 @@
+{% extends 'base.html' %}
+
+{% block title %}Partager ma position - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-2xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Partager ma position</h1>
+            <p class="text-gray-600 mt-2">Suivez votre trajet en temps réel</p>
+        </div>
+
+        <!-- Share Options -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-6">Partager avec...</h2>
+            
+            <!-- Current Trip -->
+            {% if active_trip %}
+            <div class="border border-orange-200 bg-orange-50 rounded-xl p-4 mb-6">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-taxi text-orange-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">Course en cours</p>
+                        <p class="text-sm text-gray-600">#{{ active_trip.id }} • {{ active_trip.dropoff_address }}</p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-500 text-white">
+                        En direct
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Share Methods -->
+            <div class="space-y-4">
+                <!-- WhatsApp -->
+                <button onclick="shareVia('whatsapp')" class="w-full flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fab fa-whatsapp text-green-500 text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-medium text-gray-800">WhatsApp</p>
+                        <p class="text-sm text-gray-500">Partager via WhatsApp</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+
+                <!-- SMS -->
+                <button onclick="shareVia('sms')" class="w-full flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-sms text-blue-500 text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-medium text-gray-800">SMS</p>
+                        <p class="text-sm text-gray-500">Envoyer par SMS</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+
+                <!-- Email -->
+                <button onclick="shareVia('email')" class="w-full flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-envelope text-red-500 text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-medium text-gray-800">Email</p>
+                        <p class="text-sm text-gray-500">Envoyer par email</p>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </button>
+
+                <!-- Copy Link -->
+                <button onclick="shareVia('link')" class="w-full flex items-center p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition">
+                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-link text-gray-500 text-xl"></i>
+                    </div>
+                    <div class="flex-1 text-left">
+                        <p class="font-medium text-gray-800">Copier le lien</p>
+                        <p class="text-sm text-gray-500">Copier pour partager manuellement</p>
+                    </div>
+                    <i class="fas fa-copy text-gray-400"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Link Preview -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <h3 class="font-semibold text-gray-800 mb-4">Aperçu du lien</h3>
+            
+            <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-sm text-gray-600 mb-2">Les destinataires verront:</p>
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-map-marker-alt text-orange-500"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-800">Ma position en temps réel</p>
+                        <p class="text-sm text-gray-500">Sur MoveNow</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <p class="text-xs text-gray-500">Lien de partage:</p>
+                <div class="flex items-center mt-1">
+                    <input type="text" readonly value="{{ share_url }}" class="flex-1 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-sm text-gray-600" id="share-link">
+                    <button onclick="copyLink()" class="ml-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 transition">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Settings -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+            <h3 class="font-semibold text-gray-800 mb-4">Paramètres de partage</h3>
+            
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-gray-800">Expiration</p>
+                        <p class="text-sm text-gray-500">Le lien expire automatiquement</p>
+                    </div>
+                    <select class="px-3 py-2 border rounded-lg text-sm">
+                        <option value="30">30 minutes</option>
+                        <option value="60" selected>1 heure</option>
+                        <option value="120">2 heures</option>
+                        <option value="0">Jamais</option>
+                    </select>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium text-gray-800">Protection par mot de passe</p>
+                        <p class="text-sm text-gray-500">Ajouter une couche de sécurité</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Note -->
+        <div class="mt-6 p-4 bg-green-50 rounded-xl">
+            <div class="flex items-start">
+                <i class="fas fa-shield-alt text-green-500 mt-1 mr-3"></i>
+                <div>
+                    <p class="font-medium text-green-800">Partage en toute sécurité</p>
+                    <p class="text-sm text-green-600">Votre position n'est partagée qu'avec les personnes de votre choix et expire automatiquement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SMS/WhatsApp Modal -->
+<div id="share-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-gray-800" id="modal-title">Partager via</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div id="modal-content">
+            <!-- Phone/Email Input -->
+            <div id="contact-input">
+                <label class="block text-sm font-medium text-gray-700 mb-1" id="contact-label">Numéro/Email</label>
+                <input type="text" id="contact-value" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea id="share-message" rows="4" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none mb-4"></textarea>
+            </div>
+        </div>
+        
+        <div class="flex space-x-3">
+            <button onclick="closeModal()" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition">
+                Annuler
+            </button>
+            <button onclick="confirmShare()" class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                <i class="fas fa-share mr-2"></i>Partager
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let shareType = '';
+let activeTripId = '{{ active_trip.id|default:"" }}';
+
+function shareVia(type) {
+    shareType = type;
+    const modal = document.getElementById('share-modal');
+    const title = document.getElementById('modal-title');
+    const label = document.getElementById('contact-label');
+    const message = document.getElementById('share-message');
+    
+    let defaultMessage = 'Voici ma position en temps réel sur MoveNow: ';
+    
+    if (activeTripId) {
+        defaultMessage += `\n\nSuivez ma course: ${window.location.origin}/booking/trip/${activeTripId}/track/`;
+    }
+    
+    defaultMessage += `\n\nLien: {{ share_url|default:"" }}`;
+    
+    switch(type) {
+        case 'whatsapp':
+            title.textContent = 'Partager sur WhatsApp';
+            label.textContent = 'Numéro de téléphone (avec indicatif)';
+            document.getElementById('contact-value').placeholder = '+237 6XX XXX XXX';
+            message.value = defaultMessage;
+            break;
+        case 'sms':
+            title.textContent = 'Partager par SMS';
+            label.textContent = 'Numéro de téléphone';
+            document.getElementById('contact-value').placeholder = '+237 6XX XXX XXX';
+            message.value = defaultMessage;
+            break;
+        case 'email':
+            title.textContent = 'Partager par Email';
+            label.textContent = 'Adresse email';
+            document.getElementById('contact-value').placeholder = 'email@exemple.com';
+            message.value = defaultMessage;
+            break;
+    }
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeModal() {
+    const modal = document.getElementById('share-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function confirmShare() {
+    const contact = document.getElementById('contact-value').value;
+    const message = document.getElementById('share-message').value;
+    const shareLink = '{{ share_url|default:"" }}';
+    const fullMessage = message + '\n\n' + shareLink;
+    
+    switch(shareType) {
+        case 'whatsapp':
+            window.open(`https://wa.me/${contact}?text=${encodeURIComponent(fullMessage)}`, '_blank');
+            break;
+        case 'sms':
+            window.open(`sms:${contact}?body=${encodeURIComponent(fullMessage)}`, '_blank');
+            break;
+        case 'email':
+            window.open(`mailto:${contact}?subject=${encodeURIComponent('Ma position MoveNow')}&body=${encodeURIComponent(fullMessage)}`, '_blank');
+            break;
+    }
+    
+    closeModal();
+    showToast('Lien partagé avec succès!');
+}
+
+function copyLink() {
+    const link = document.getElementById('share-link');
+    link.select();
+    document.execCommand('copy');
+    showToast('Lien copié dans le presse-papier!');
+}
+
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+    toast.innerHTML = `<i class="fas fa-check-circle mr-2"></i>${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}
+
