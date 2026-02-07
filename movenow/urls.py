@@ -32,8 +32,8 @@ urlpatterns = [
     path('privacy/', TemplateView.as_view(template_name='core/privacy_policy.html'), name='privacy_policy'),
     path('terms/', TemplateView.as_view(template_name='core/terms.html'), name='terms'),
     
-    # Auth (Allauth) - Commented out to avoid conflicts with custom accounts
-    # path('accounts/', include('allauth.urls')),
+    # Auth (Allauth) - Social login
+    path('accounts/', include('allauth.urls')),
     
 ]
 

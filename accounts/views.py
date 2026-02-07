@@ -33,11 +33,8 @@ def register(request):
             UserWallet.objects.create(user=user)
             UserSettings.objects.create(user=user)
 
-            # Spécifier le backend d'authentification explicitement
-            user.backend = 'django.contrib.auth.backends.ModelBackend'
-
-            # Connecter l'utilisateur immédiatement
-            login(request, user)
+            # Connecter l'utilisateur immédiatement avec le backend spécifié
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             
             # Envoyer l'email de vérification (optionnel maintenant)
             try:
@@ -175,7 +172,7 @@ def verify_email(request, token):
         messages.success(request, "Email vérifié avec succès !")
         
         if not request.user.is_authenticated:
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         
         return redirect('home')
     
