@@ -28,4 +28,8 @@ urlpatterns = [
     # Role Management
     path('become/driver/', views.become_driver, name='api_become_driver'),
     path('become/fleet/', views.become_fleet_owner, name='api_become_fleet_owner'),
+    
+    # Validation API
+    path('check-email/', views.check_email_exists, name='api_check_email'),
+    path('check-phone/', views.check_phone_exists, name='api_check_phone'),
 ]

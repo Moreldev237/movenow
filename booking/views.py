@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 import json
 import uuid
 
@@ -20,6 +21,49 @@ from django.contrib.gis.db.models.functions import Distance
 @passenger_required
 def book(request):
     """Réserver une course"""
+    # Créer les types de véhicules par défaut s'ils n'existent pas
+    if not VehicleType.objects.filter(is_active=True).exists():
+        VehicleType.objects.get_or_create(
+            name='moto',
+            defaults={
+                'base_price': 500,
+                'price_per_km': 250,
+                'price_per_minute': 50,
+                'capacity': 1,
+                'is_active': True
+            }
+        )
+        VehicleType.objects.get_or_create(
+            name='voiture',
+            defaults={
+                'base_price': 1000,
+                'price_per_km': 300,
+                'price_per_minute': 75,
+                'capacity': 4,
+                'is_active': True
+            }
+        )
+        VehicleType.objects.get_or_create(
+            name='van',
+            defaults={
+                'base_price': 1500,
+                'price_per_km': 400,
+                'price_per_minute': 100,
+                'capacity': 6,
+                'is_active': True
+            }
+        )
+        VehicleType.objects.get_or_create(
+            name='vip',
+            defaults={
+                'base_price': 2000,
+                'price_per_km': 500,
+                'price_per_minute': 125,
+                'capacity': 4,
+                'is_active': True
+            }
+        )
+
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
@@ -27,7 +71,7 @@ def book(request):
             booking = form.save(commit=False)
             booking.passenger = request.user
             booking.booking_id = uuid.uuid4()
-            
+
             # Calculer l'itinéraire et le prix
             try:
                 route = calculate_route(
@@ -36,7 +80,7 @@ def book(request):
                     booking.dropoff_lat,
                     booking.dropoff_lng
                 )
-                
+
                 booking.distance = route['distance']
                 booking.duration = route['duration']
                 booking.estimated_fare = estimate_fare(
@@ -45,32 +89,33 @@ def book(request):
                     booking.duration,
                     booking.is_shared
                 )
-                
+
                 booking.save()
-                
+
                 # Rechercher des chauffeurs
                 search_drivers_for_booking(booking)
-                
+
                 messages.success(
                     request,
                     "Réservation créée ! Recherche de chauffeurs en cours..."
                 )
                 return redirect('booking:track', booking_id=booking.booking_id)
-                
+
             except Exception as e:
                 messages.error(request, f"Erreur lors du calcul de l'itinéraire: {e}")
-    
+
     else:
         form = BookingForm()
-    
+
     # Types de véhicules disponibles
     vehicle_types = VehicleType.objects.filter(is_active=True)
-    
+
     context = {
         'form': form,
         'vehicle_types': vehicle_types,
+        'GOOGLE_MAPS_API_KEY': getattr(settings, 'GOOGLE_MAPS_API_KEY', ''),
     }
-    
+
     return render(request, 'booking/book.html', context)
 
 def search_drivers_for_booking(booking):

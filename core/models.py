@@ -7,14 +7,14 @@ class VehicleType(models.Model):
     """Types de véhicules disponibles"""
     class VehicleTypeChoices(models.TextChoices):
         MOTO = 'moto', _('Moto')
-        TAXI = 'taxi', _('Taxi')
+        VOITURE = 'voiture', _('Voiture')
         VAN = 'van', _('Van')
         VIP = 'vip', _('VIP')
     
     name = models.CharField(
         max_length=50,
         choices=VehicleTypeChoices.choices,
-        default=VehicleTypeChoices.TAXI
+        default=VehicleTypeChoices.VOITURE
     )
     base_price = models.DecimalField(
         max_digits=10,

@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Inscription - MoveNow{% endblock %}
 
@@ -18,7 +19,18 @@
         <!-- Card -->
         <div class="bg-white rounded-2xl shadow-xl p-8">
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-2">Créer un compte</h2>
-            <p class="text-gray-500 text-center mb-6">Rejoignez MoveNow dès maintenant</p>
+            <p class="text-gray-500 text-center mb-6">Rejoignez MoveNow en quelques secondes</p>
+            
+            <!-- Success/Error Messages -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="p-3 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %} text-sm mb-2">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             
             <!-- Social Login -->
             <div class="flex gap-4 mb-6">
@@ -37,25 +49,25 @@
                     <div class="w-full border-t border-gray-300"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">ou</span>
+                    <span class="px-2 bg-white text-gray-500">ou inscrivez-vous simplement</span>
                 </div>
             </div>
             
             <!-- Registration Form -->
-            <form method="POST" class="space-y-4">
+            <form method="POST" class="space-y-4" id="register-form">
                 {% csrf_token %}
                 
                 <!-- Name Fields -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
                         {{ form.first_name }}
                         {% if form.first_name.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
                         {% endif %}
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
                         {{ form.last_name }}
                         {% if form.last_name.errors %}
                             <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
@@ -65,43 +77,71 @@
                 
                 <!-- Email -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                     {{ form.email }}
                     {% if form.email.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                    {% if form.email.help_text %}
+                        <p class="text-gray-400 text-xs mt-1">{{ form.email.help_text }}</p>
                     {% endif %}
                 </div>
                 
                 <!-- Phone -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
                     {{ form.phone }}
                     {% if form.phone.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ form.phone.errors.0 }}</p>
+                    {% endif %}
+                    {% if form.phone.help_text %}
+                        <p class="text-gray-400 text-xs mt-1">{{ form.phone.help_text }}</p>
                     {% endif %}
                 </div>
                 
                 <!-- Password -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-                    {{ form.password1 }}
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe *</label>
+                    <div class="relative">
+                        {{ form.password1 }}
+                        <button type="button" class="password-toggle absolute inset-y-0 right-0 px-3 flex items-center" data-target="id_password1">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                        </button>
+                    </div>
                     {% if form.password1.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                    {% if form.password1.help_text %}
+                        <p class="text-gray-400 text-xs mt-1">{{ form.password1.help_text }}</p>
                     {% endif %}
                 </div>
                 
                 <!-- Confirm Password -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-                    {{ form.password2 }}
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe *</label>
+                    <div class="relative">
+                        {{ form.password2 }}
+                        <button type="button" class="password-toggle absolute inset-y-0 right-0 px-3 flex items-center" data-target="id_password2">
+                            <i class="fas fa-eye text-gray-400 hover:text-gray-600"></i>
+                        </button>
+                    </div>
                     {% if form.password2.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
                     {% endif %}
                 </div>
                 
+                <!-- Tips -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p class="text-blue-700 text-xs">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Conseils :</strong> Utilisez un numéro de téléphone valide (MTN, Orange ou Nexttel). 
+                        Vous pourrez vous connecter avec votre email OU votre numéro de téléphone.
+                    </p>
+                </div>
+                
                 <!-- Terms -->
                 <div class="flex items-start">
-                    <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-orange-500 border-gray-300 rounded mt-0.5">
+                    <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-orange-500 border-gray-300 rounded mt-0.5" checked>
                     <label for="terms" class="ml-2 text-sm text-gray-600">
                         J'accepte les <a href="#" class="text-orange-500 hover:underline">conditions d'utilisation</a>
                         et la <a href="#" class="text-orange-500 hover:underline">politique de confidentialité</a>
@@ -124,3 +164,6 @@
 </div>
 {% endblock %}
 
+{% block extra_js %}
+<script src="{% static 'js/auth-validation.js' %}"></script>
+{% endblock %}
