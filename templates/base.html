@@ -13,12 +13,23 @@
     <script>
         // Global Google Maps callback
         function initGoogleMapsAPI() {
+            console.log('Google Maps API loaded successfully');
             // Dispatch custom event for other scripts to listen to
             const event = new Event('googleMapsLoaded');
             document.dispatchEvent(event);
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBV9FAmy_6-ODGG-Dg45m8zj5tte9xkxrY&libraries=places,geometry&callback=initGoogleMapsAPI" async defer></script>
+    {% if GOOGLE_MAPS_API_KEY %}
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places,geometry&callback=initGoogleMapsAPI" async defer></script>
+    {% else %}
+    <!-- Fallback: Google Maps API key not configured -->
+    <script>
+        console.warn('Google Maps API key not configured');
+        function initGoogleMapsAPI() {
+            console.error('Google Maps API key is missing');
+        }
+    </script>
+    {% endif %}
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

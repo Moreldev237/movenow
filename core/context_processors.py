@@ -1,3 +1,5 @@
+from django.conf import settings
+
 def site_settings(request):
     """
     Context processor to add site-wide settings to all templates
@@ -8,4 +10,5 @@ def site_settings(request):
         'site_url': 'https://movenow.cm',
         'support_email': 'support@movenow.cm',
         'company_phone': '+237 6XX XXX XXX',
+        'GOOGLE_MAPS_API_KEY': getattr(settings, 'GOOGLE_MAPS_API_KEY', ''),
     }
