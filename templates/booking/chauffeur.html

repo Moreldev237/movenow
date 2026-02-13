@@ -1,0 +1,750 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Chauffeur - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Nos Chauffeurs</h1>
+            <p class="text-gray-500 mt-1">Choisissez un chauffeur professionnel pour votre trajet</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Filters Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Filtres</h2>
+                    
+                    <!-- Vehicle Type Filter -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Type de véhicule</label>
+                        <div class="space-y-2">
+                            {% for vehicle_type in vehicle_types %}
+                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition" data-vehicle-type="{{ vehicle_type.id }}" data-vehicle-name="{{ vehicle_type.name }}">
+                                <input type="radio" name="vehicle_type_filter" value="{{ vehicle_type.id }}" class="sr-only peer" {% if forloop.first %}checked{% endif %}>
+                                <div class="flex items-center flex-1">
+                                    {% if vehicle_type.name == 'moto' %}
+                                        <i class="fas fa-motorcycle text-orange-500 mr-3"></i>
+                                    {% elif vehicle_type.name == 'voiture' %}
+                                        <i class="fas fa-car text-orange-500 mr-3"></i>
+                                    {% elif vehicle_type.name == 'van' %}
+                                        <i class="fas fa-shuttle-van text-orange-500 mr-3"></i>
+                                    {% elif vehicle_type.name == 'vip' %}
+                                        <i class="fas fa-star text-orange-500 mr-3"></i>
+                                    {% else %}
+                                        <i class="fas fa-car text-orange-500 mr-3"></i>
+                                    {% endif %}
+                                    <span class="text-sm font-medium">{{ vehicle_type.get_name_display }}</span>
+                                </div>
+                                <div class="w-4 h-4 border-2 border-gray-300 rounded-full peer-checked:border-orange-500 peer-checked:bg-orange-500"></div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Location Input -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Votre position</label>
+                        <button type="button" onclick="useCurrentLocation()" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition">
+                            <i class="fas fa-crosshairs text-orange-500 mr-2"></i>
+                            <span id="location-btn-text">Utiliser ma position</span>
+                        </button>
+                        <input type="hidden" id="user_lat" value="">
+                        <input type="hidden" id="user_lng" value="">
+                    </div>
+                    
+                    <!-- Search Button -->
+                    <button type="button" onclick="searchDrivers()" class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                        <i class="fas fa-search mr-2"></i>
+                        Rechercher
+                    </button>
+                </div>
+                
+                <!-- Pricing Info -->
+                <div class="bg-white rounded-2xl shadow-lg p-6 mt-6">
+                    <h3 class="font-semibold text-gray-800 mb-3">Informations tarifaires</h3>
+                    <div id="pricing-info" class="text-sm text-gray-600">
+                        <p>Sélectionnez un type de véhicule et recherchez pour voir les prix.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="lg:col-span-3">
+                <!-- Map -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                    <div id="chauffeur-map" class="h-[300px]"></div>
+                </div>
+                
+                <!-- Drivers List -->
+                <div class="bg-white rounded-2xl shadow-lg p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Chauffeurs disponibles</h2>
+                        <span id="drivers-count" class="text-sm text-gray-500">0 chauffeur(s) trouvé(s)</span>
+                    </div>
+                    
+                    <!-- Loading State -->
+                    <div id="loading-state" class="hidden text-center py-8">
+                        <div class="loading-spinner mx-auto mb-4"></div>
+                        <p class="text-gray-500">Recherche de chauffeurs...</p>
+                    </div>
+                    
+                    <!-- No Results -->
+                    <div id="no-results" class="hidden text-center py-8">
+                        <i class="fas fa-car text-gray-300 text-4xl mb-4"></i>
+                        <p class="text-gray-500">Aucun chauffeur disponible</p>
+                        <p class="text-sm text-gray-400">Essayez avec un autre type de véhicule</p>
+                    </div>
+                    
+                    <!-- Drivers Grid -->
+                    <div id="drivers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Drivers will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Booking Modal -->
+<div id="booking-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Confirmer la réservation</h3>
+                <button onclick="closeBookingModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Selected Driver Info -->
+            <div id="selected-driver-info" class="bg-orange-50 rounded-lg p-4 mb-4">
+                <!-- Will be populated by JS -->
+            </div>
+            
+            <!-- Trip Form -->
+            <form id="booking-form" class="space-y-4">
+                <!-- Pickup Location -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-map-marker-alt text-green-500 mr-1"></i>
+                        Point de départ
+                    </label>
+                    <input type="text" id="pickup_address" placeholder="Adresse de départ" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    <input type="hidden" id="pickup_lat" value="">
+                    <input type="hidden" id="pickup_lng" value="">
+                </div>
+                
+                <!-- Dropoff Location -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                        Destination
+                    </label>
+                    <input type="text" id="dropoff_address" placeholder="Adresse de destination" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    <input type="hidden" id="dropoff_lat" value="">
+                    <input type="hidden" id="dropoff_lng" value="">
+                </div>
+                
+                <!-- Estimated Fare -->
+                <div id="fare-display" class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Prix estimé:</span>
+                        <span class="text-2xl font-bold text-orange-500" id="estimated-fare">-- XAF</span>
+                    </div>
+                </div>
+                
+                <!-- Payment Method -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Mode de paiement</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:border-orange-500">
+                            <input type="radio" name="payment_method" value="cash" checked class="sr-only peer">
+                            <i class="fas fa-money-bill-wave text-green-500 mr-2"></i>
+                            <span class="text-sm">Espèces</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:border-orange-500">
+                            <input type="radio" name="payment_method" value="mobile_money" class="sr-only peer">
+                            <i class="fas fa-mobile-alt text-blue-500 mr-2"></i>
+                            <span class="text-sm">Mobile Money</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:border-orange-500">
+                            <input type="radio" name="payment_method" value="orange_money" class="sr-only peer">
+                            <i class="fas fa-phone text-orange-500 mr-2"></i>
+                            <span class="text-sm">Orange Money</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:border-orange-500">
+                            <input type="radio" name="payment_method" value="card" class="sr-only peer">
+                            <i class="fas fa-credit-card text-purple-500 mr-2"></i>
+                            <span class="text-sm">Carte</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Submit Button -->
+                <button type="submit" id="confirm-booking-btn" class="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition disabled:opacity-50">
+                    <i class="fas fa-check mr-2"></i>
+                    Confirmer la réservation
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #e5e7eb;
+        border-top-color: #f97316;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    .driver-card {
+        transition: all 0.2s ease;
+    }
+    
+    .driver-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+    }
+    
+    .driver-card.selected {
+        border-color: #f97316;
+        background-color: #fff7ed;
+    }
+    
+    #chauffeur-map {
+        width: 100%;
+        background: #f3f4f6;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Global variables
+    let map;
+    let driverMarkers = [];
+    let userMarker = null;
+    let selectedDriver = null;
+    let pickupAutocomplete, dropoffAutocomplete;
+    
+    // Default center - Douala, Cameroon
+    const DEFAULT_CENTER = { lat: 4.0333, lng: 9.7167 };
+    
+    // Initialize on DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof google !== 'undefined' && google.maps) {
+            initializeMap();
+            initAutocomplete();
+        } else {
+            document.addEventListener('googleMapsLoaded', function() {
+                initializeMap();
+                initAutocomplete();
+            });
+        }
+    });
+    
+    // Initialize Google Map
+    function initializeMap() {
+        const mapElement = document.getElementById('chauffeur-map');
+        if (!mapElement) return;
+        
+        map = new google.maps.Map(mapElement, {
+            center: DEFAULT_CENTER,
+            zoom: 13,
+            mapTypeControl: false,
+            fullscreenControl: true,
+            zoomControl: true
+        });
+        
+        // Try to get user's location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const { latitude, longitude } = position.coords;
+                    map.setCenter({ lat: latitude, lng: longitude });
+                    document.getElementById('user_lat').value = latitude;
+                    document.getElementById('user_lng').value = longitude;
+                    document.getElementById('location-btn-text').textContent = 'Position actuelle';
+                    
+                    // Add user marker
+                    userMarker = new google.maps.Marker({
+                        position: { lat: latitude, lng: longitude },
+                        map: map,
+                        icon: createUserMarkerIcon(),
+                        title: 'Votre position'
+                    });
+                    
+                    // Auto-search drivers
+                    setTimeout(searchDrivers, 500);
+                },
+                error => {
+                    console.log('Could not get user location:', error);
+                }
+            );
+        }
+    }
+    
+    // Create user marker icon
+    function createUserMarkerIcon() {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 40" width="32" height="40">
+            <path fill="#3b82f6" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12z"/>
+            <circle fill="white" cx="12" cy="10" r="5"/>
+        </svg>`;
+        return {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+            scaledSize: new google.maps.Size(32, 40),
+            anchor: new google.maps.Point(16, 40)
+        };
+    }
+    
+    // Initialize autocomplete
+    function initAutocomplete() {
+        if (typeof google === 'undefined' || !google.maps.places) return;
+        
+        const pickupInput = document.getElementById('pickup_address');
+        const dropoffInput = document.getElementById('dropoff_address');
+        
+        if (pickupInput) {
+            pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'cm' }
+            });
+            pickupAutocomplete.addListener('place_changed', function() {
+                const place = pickupAutocomplete.getPlace();
+                if (place.geometry) {
+                    document.getElementById('pickup_lat').value = place.geometry.location.lat();
+                    document.getElementById('pickup_lng').value = place.geometry.location.lng();
+                    calculateFare();
+                }
+            });
+        }
+        
+        if (dropoffInput) {
+            dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'cm' }
+            });
+            dropoffAutocomplete.addListener('place_changed', function() {
+                const place = dropoffAutocomplete.getPlace();
+                if (place.geometry) {
+                    document.getElementById('dropoff_lat').value = place.geometry.location.lat();
+                    document.getElementById('dropoff_lng').value = place.geometry.location.lng();
+                    calculateFare();
+                }
+            });
+        }
+    }
+    
+    // Use current location
+    function useCurrentLocation() {
+        if (!navigator.geolocation) {
+            alert('La géolocalisation n\'est pas supportée par votre navigateur.');
+            return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                const { latitude, longitude } = position.coords;
+                document.getElementById('user_lat').value = latitude;
+                document.getElementById('user_lng').value = longitude;
+                document.getElementById('location-btn-text').textContent = 'Position actuelle';
+                
+                if (map) {
+                    map.setCenter({ lat: latitude, lng: longitude });
+                    
+                    if (userMarker) {
+                        userMarker.setPosition({ lat: latitude, lng: longitude });
+                    } else {
+                        userMarker = new google.maps.Marker({
+                            position: { lat: latitude, lng: longitude },
+                            map: map,
+                            icon: createUserMarkerIcon(),
+                            title: 'Votre position'
+                        });
+                    }
+                }
+                
+                searchDrivers();
+            },
+            error => {
+                alert('Impossible d\'obtenir votre position.');
+            }
+        );
+    }
+    
+    // Search for drivers
+    async function searchDrivers() {
+        const lat = document.getElementById('user_lat').value;
+        const lng = document.getElementById('user_lng').value;
+        
+        if (!lat || !lng) {
+            alert('Veuillez d\'abord sélectionner votre position.');
+            return;
+        }
+        
+        // Get selected vehicle type
+        const vehicleTypeInput = document.querySelector('input[name="vehicle_type_filter"]:checked');
+        const vehicleTypeId = vehicleTypeInput ? vehicleTypeInput.value : '';
+        
+        // Show loading
+        document.getElementById('loading-state').classList.remove('hidden');
+        document.getElementById('no-results').classList.add('hidden');
+        document.getElementById('drivers-grid').innerHTML = '';
+        
+        try {
+            const response = await fetch(`/booking/api/chauffeur/search/?lat=${lat}&lng=${lng}&vehicle_type=${vehicleTypeId}`, {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            document.getElementById('loading-state').classList.add('hidden');
+            
+            if (data.drivers && data.drivers.length > 0) {
+                displayDrivers(data.drivers);
+                displayDriversOnMap(data.drivers);
+                updatePricingInfo(data.vehicle_info);
+            } else {
+                document.getElementById('no-results').classList.remove('hidden');
+            }
+            
+            document.getElementById('drivers-count').textContent = `${data.count || 0} chauffeur(s) trouvé(s)`;
+            
+        } catch (error) {
+            console.error('Error searching drivers:', error);
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('no-results').classList.remove('hidden');
+        }
+    }
+    
+    // Display drivers in grid
+    function displayDrivers(drivers) {
+        const grid = document.getElementById('drivers-grid');
+        grid.innerHTML = '';
+        
+        drivers.forEach(driver => {
+            const card = document.createElement('div');
+            card.className = 'driver-card border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-orange-500';
+            card.onclick = () => openBookingModal(driver);
+            
+            const vehicleIcon = getVehicleIcon(driver.vehicle_type);
+            
+            card.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center">
+                        <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center mr-3 overflow-hidden">
+                            ${driver.profile_picture 
+                                ? `<img src="${driver.profile_picture}" alt="${driver.name}" class="w-full h-full object-cover">`
+                                : `<i class="fas fa-user text-gray-400 text-2xl"></i>`
+                            }
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${driver.name}</h4>
+                            <p class="text-sm text-gray-500">${driver.vehicle_model || 'Véhicule'} - ${driver.vehicle_color || ''}</p>
+                            <p class="text-xs text-gray-400">${driver.vehicle_plate || ''}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="flex items-center text-orange-500">
+                            <i class="fas fa-star mr-1"></i>
+                            <span class="font-semibold">${driver.rating ? driver.rating.toFixed(1) : 'Nouveau'}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">${driver.total_trips || 0} courses</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center text-green-600">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        <span class="text-sm font-medium">Disponible</span>
+                    </div>
+                    <div class="text-orange-500 font-semibold">
+                        ${driver.distance_km ? driver.distance_km + ' km' : ''}
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition">
+                        <i class="fas fa-taxi mr-2"></i>
+                        Réserver
+                    </button>
+                </div>
+            `;
+            
+            grid.appendChild(card);
+        });
+    }
+    
+    // Display drivers on map
+    function displayDriversOnMap(drivers) {
+        // Clear existing markers
+        driverMarkers.forEach(marker => marker.setMap(null));
+        driverMarkers = [];
+        
+        drivers.forEach(driver => {
+            if (driver.lat && driver.lng) {
+                const marker = new google.maps.Marker({
+                    position: { lat: driver.lat, lng: driver.lng },
+                    map: map,
+                    icon: createDriverMarkerIcon(driver.vehicle_type),
+                    title: driver.name
+                });
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 10px;">
+                            <strong>${driver.name}</strong><br>
+                            <span>${driver.vehicle_type}</span><br>
+                            <span>★ ${driver.rating || 'Nouveau'}</span>
+                        </div>
+                    `
+                });
+                
+                marker.addListener('click', () => infoWindow.open(map, marker));
+                driverMarkers.push(marker);
+            }
+        });
+        
+        // Fit bounds to show all markers
+        if (driverMarkers.length > 0) {
+            const bounds = new google.maps.LatLngBounds();
+            driverMarkers.forEach(marker => bounds.extend(marker.getPosition()));
+            if (userMarker) bounds.extend(userMarker.getPosition());
+            map.fitBounds(bounds);
+        }
+    }
+    
+    // Create driver marker icon
+    function createDriverMarkerIcon(vehicleType) {
+        let color = '#f97316';
+        
+        if (vehicleType === 'moto') color = '#3b82f6';
+        else if (vehicleType === 'van') color = '#8b5cf6';
+        else if (vehicleType === 'vip') color = '#eab308';
+        
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 40" width="32" height="40">
+            <path fill="${color}" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12z"/>
+            <circle fill="white" cx="12" cy="10" r="5"/>
+        </svg>`;
+        
+        return {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+            scaledSize: new google.maps.Size(32, 40),
+            anchor: new google.maps.Point(16, 40)
+        };
+    }
+    
+    // Get vehicle icon
+    function getVehicleIcon(vehicleType) {
+        switch(vehicleType) {
+            case 'moto': return 'fa-motorcycle';
+            case 'van': return 'fa-shuttle-van';
+            case 'vip': return 'fa-star';
+            default: return 'fa-car';
+        }
+    }
+    
+    // Update pricing info
+    function updatePricingInfo(vehicleInfo) {
+        const pricingEl = document.getElementById('pricing-info');
+        if (vehicleInfo) {
+            pricingEl.innerHTML = `
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span>Prix de base:</span>
+                        <span class="font-medium">${vehicleInfo.base_price} XAF</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Prix par km:</span>
+                        <span class="font-medium">${vehicleInfo.price_per_km} XAF</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Capacité:</span>
+                        <span class="font-medium">${vehicleInfo.capacity} personne(s)</span>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Open booking modal
+    function openBookingModal(driver) {
+        selectedDriver = driver;
+        
+        const modal = document.getElementById('booking-modal');
+        const driverInfo = document.getElementById('selected-driver-info');
+        
+        const vehicleIcon = getVehicleIcon(driver.vehicle_type);
+        
+        driverInfo.innerHTML = `
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mr-3 overflow-hidden">
+                    ${driver.profile_picture 
+                        ? `<img src="${driver.profile_picture}" alt="${driver.name}" class="w-full h-full object-cover">`
+                        : `<i class="fas fa-user text-gray-400 text-xl"></i>`
+                    }
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-800">${driver.name}</h4>
+                    <p class="text-sm text-gray-600">
+                        <i class="fas ${vehicleIcon} mr-1"></i>
+                        ${driver.vehicle_model || driver.vehicle_type} - ${driver.vehicle_color || ''}
+                    </p>
+                    <p class="text-xs text-gray-500">${driver.vehicle_plate || ''}</p>
+                </div>
+            </div>
+        `;
+        
+        modal.classList.remove('hidden');
+    }
+    
+    // Close booking modal
+    function closeBookingModal() {
+        document.getElementById('booking-modal').classList.add('hidden');
+        selectedDriver = null;
+    }
+    
+    // Calculate fare
+    async function calculateFare() {
+        const pickupLat = document.getElementById('pickup_lat').value;
+        const pickupLng = document.getElementById('pickup_lng').value;
+        const dropoffLat = document.getElementById('dropoff_lat').value;
+        const dropoffLng = document.getElementById('dropoff_lng').value;
+        
+        if (!pickupLat || !dropoffLat || !selectedDriver) return;
+        
+        const vehicleTypeInput = document.querySelector('input[name="vehicle_type_filter"]:checked');
+        const vehicleTypeId = vehicleTypeInput ? vehicleTypeInput.value : '';
+        
+        try {
+            // Calculate distance using Google Maps
+            const service = new google.maps.DirectionsService();
+            const result = await service.route({
+                origin: { lat: parseFloat(pickupLat), lng: parseFloat(pickupLng) },
+                destination: { lat: parseFloat(dropoffLat), lng: parseFloat(dropoffLng) },
+                travelMode: google.maps.TravelMode.DRIVING
+            });
+            
+            const distance = result.routes[0].legs[0].distance.value / 1000; // km
+            const duration = Math.round(result.routes[0].legs[0].duration.value / 60); // minutes
+            
+            // Get fare estimate
+            const response = await fetch(`/booking/api/chauffeur/estimate/?vehicle_type_id=${vehicleTypeId}&distance=${distance}&duration=${duration}`, {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.estimated_fare) {
+                document.getElementById('estimated-fare').textContent = `${data.estimated_fare} XAF`;
+            }
+            
+        } catch (error) {
+            console.error('Error calculating fare:', error);
+        }
+    }
+    
+    // Handle booking form submission
+    document.getElementById('booking-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (!selectedDriver) {
+            alert('Veuillez sélectionner un chauffeur.');
+            return;
+        }
+        
+        const pickupLat = document.getElementById('pickup_lat').value;
+        const pickupLng = document.getElementById('pickup_lng').value;
+        const pickupAddress = document.getElementById('pickup_address').value;
+        const dropoffLat = document.getElementById('dropoff_lat').value;
+        const dropoffLng = document.getElementById('dropoff_lng').value;
+        const dropoffAddress = document.getElementById('dropoff_address').value;
+        
+        if (!pickupLat || !dropoffLat || !pickupAddress || !dropoffAddress) {
+            alert('Veuillez entrer les adresses de départ et de destination.');
+            return;
+        }
+        
+        const vehicleTypeInput = document.querySelector('input[name="vehicle_type_filter"]:checked');
+        const vehicleTypeId = vehicleTypeInput ? vehicleTypeInput.value : '';
+        
+        const paymentMethod = document.querySelector('input[name="payment_method"]:checked').value;
+        
+        const submitBtn = document.getElementById('confirm-booking-btn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Traitement...';
+        
+        try {
+            const response = await fetch('/booking/api/chauffeur/book/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    driver_id: selectedDriver.id,
+                    pickup_lat: pickupLat,
+                    pickup_lng: pickupLng,
+                    pickup_address: pickupAddress,
+                    dropoff_lat: dropoffLat,
+                    dropoff_lng: dropoffLng,
+                    dropoff_address: dropoffAddress,
+                    vehicle_type_id: vehicleTypeId,
+                    payment_method: paymentMethod
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Réservation créée avec succès!');
+                closeBookingModal();
+                window.location.href = `/booking/trip/${data.trip_id}/`;
+            } else {
+                alert('Erreur: ' + (data.error || 'Une erreur est survenue'));
+            }
+            
+        } catch (error) {
+            console.error('Booking error:', error);
+            alert('Une erreur est survenue lors de la réservation.');
+        }
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Confirmer la réservation';
+    });
+    
+    // Get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}
+

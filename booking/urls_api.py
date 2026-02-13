@@ -29,5 +29,7 @@ urlpatterns = [
     # Driver Availability
     path('drivers/available/', views.get_available_drivers, name='api_available_drivers'),
     path('drivers/nearby/', views.get_nearby_drivers, name='api_nearby_drivers'),
+    path('drivers/search/', views.search_drivers_for_booking_api, name='api_search_drivers'),
+    path('drivers/by-vehicle-type/', views.get_drivers_by_vehicle_type_api, name='api_drivers_by_vehicle_type'),
 ]
 

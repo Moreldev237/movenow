@@ -92,14 +92,62 @@ def book(request):
 
                 booking.save()
 
-                # Rechercher des chauffeurs
-                search_drivers_for_booking(booking)
+                # Vérifier si un chauffeur a été sélectionné
+                selected_driver_id = request.POST.get('selected_driver_id')
+                if selected_driver_id:
+                    # Créer la réservation avec le chauffeur sélectionné
+                    try:
+                        driver = Driver.objects.get(id=selected_driver_id, is_available=True, is_verified=True)
+                        
+                        # Créer directement une demande acceptée
+                        BookingRequest.objects.create(
+                            booking=booking,
+                            driver=driver,
+                            status='accepted',
+                            responded_at=timezone.now(),
+                            expires_at=timezone.now() + timezone.timedelta(minutes=30)
+                        )
+                        
+                        # Convertir en course
+                        booking.status = 'accepted'
+                        booking.save()
+                        
+                        # Créer le trip
+                        trip = Trip.objects.create(
+                            passenger=booking.passenger,
+                            driver=driver,
+                            vehicle_type=booking.vehicle_type,
+                            pickup_address=booking.pickup_address,
+                            pickup_location=Point(booking.pickup_lng, booking.pickup_lat),
+                            dropoff_address=booking.dropoff_address,
+                            dropoff_location=Point(booking.dropoff_lng, booking.dropoff_lat),
+                            distance=booking.distance,
+                            duration=booking.duration,
+                            fare=booking.estimated_fare,
+                            is_shared=booking.is_shared,
+                            sharing_discount=booking.sharing_discount,
+                            status='accepted',
+                            payment_method=request.POST.get('payment_method', 'cash')
+                        )
 
-                messages.success(
-                    request,
-                    "Réservation créée ! Recherche de chauffeurs en cours..."
-                )
-                return redirect('booking:track', booking_id=booking.booking_id)
+                        messages.success(
+                            request,
+                            "Réservation confirmée ! Votre chauffeur est en route."
+                        )
+                        return redirect('booking:trip_detail', trip_id=trip.id)
+
+                    except Driver.DoesNotExist:
+                        messages.error(request, "Chauffeur sélectionné non disponible.")
+                        return redirect('booking:book')
+                else:
+                    # Rechercher des chauffeurs (mode classique)
+                    search_drivers_for_booking(booking)
+
+                    messages.success(
+                        request,
+                        "Réservation créée ! Recherche de chauffeurs en cours..."
+                    )
+                    return redirect('booking:track', booking_id=booking.booking_id)
 
             except Exception as e:
                 messages.error(request, f"Erreur lors du calcul de l'itinéraire: {e}")
@@ -586,6 +634,216 @@ def get_nearby_drivers(request):
         })
 
     return JsonResponse({'drivers': data})
+
+
+def search_drivers_for_booking_api(request):
+    """Rechercher des chauffeurs disponibles pour une réservation (API)"""
+    try:
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+        vehicle_type_id = request.GET.get('vehicle_type')
+        radius = int(request.GET.get('radius', 10000))  # 10km par défaut
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Paramètres invalides'}, status=400)
+
+    point = Point(lng, lat, srid=4326)
+
+    # Construire la requête de base
+    drivers_query = Driver.objects.filter(
+        is_available=True,
+        is_verified=True,
+        current_location__isnull=False
+    )
+
+    # Filtrer par type de véhicule si spécifié
+    if vehicle_type_id:
+        try:
+            vehicle_type_id = int(vehicle_type_id)
+            drivers_query = drivers_query.filter(vehicle_type_id=vehicle_type_id)
+        except ValueError:
+            # Si ce n'est pas un ID numérique, essaie de chercher par nom
+            drivers_query = drivers_query.filter(vehicle_type__name=vehicle_type_id)
+
+    # Annoter avec la distance et filtrer
+    drivers = drivers_query.annotate(
+        distance=Distance('current_location', point)
+    ).filter(
+        distance__lt=radius
+    ).select_related('user', 'vehicle_type').order_by('distance')[:20]
+
+    data = []
+    for driver in drivers:
+        data.append({
+            'id': driver.id,
+            'name': f"{driver.user.first_name} {driver.user.last_name}",
+            'phone': driver.user.phone if hasattr(driver.user, 'phone') else None,
+            'vehicle_type': driver.vehicle_type.name if driver.vehicle_type else None,
+            'rating': float(driver.rating) if driver.rating else None,
+            'distance': float(driver.distance.m) if driver.distance else None,
+            'is_available': driver.is_available,
+            'is_verified': driver.is_verified,
+            'lat': driver.current_location.y if driver.current_location else None,
+            'lng': driver.current_location.x if driver.current_location else None,
+        })
+
+    # Pour le diagnostic, compter les chauffeurs par statut
+    all_drivers_for_vehicle = Driver.objects.all()
+    
+    # Filtrer par type de véhicule si spécifié
+    if vehicle_type_id:
+        try:
+            vehicle_type_id_int = int(vehicle_type_id)
+            all_drivers_for_vehicle = all_drivers_for_vehicle.filter(vehicle_type_id=vehicle_type_id_int)
+        except ValueError:
+            # Si ce n'est pas un ID numérique, chercher par nom
+            all_drivers_for_vehicle = all_drivers_for_vehicle.filter(vehicle_type__name=vehicle_type_id)
+
+    # Calculer les statistiques
+    total_registered = all_drivers_for_vehicle.count()
+    available_count = all_drivers_for_vehicle.filter(is_available=True).count()
+    verified_count = all_drivers_for_vehicle.filter(is_verified=True).count()
+    with_location_count = all_drivers_for_vehicle.filter(current_location__isnull=False).count()
+    fully_available_count = all_drivers_for_vehicle.filter(
+        is_available=True,
+        is_verified=True,
+        current_location__isnull=False
+    ).count()
+
+    # Message d'avertissement si aucun chauffeur trouvé
+    warning_message = None
+    if len(data) == 0:
+        if total_registered == 0:
+            warning_message = "Aucun chauffeur n'est enregistré dans le système."
+        elif fully_available_count == 0:
+            if available_count == 0:
+                warning_message = f"Aucun chauffeur n'est en ligne ({available_count} disponibles au total)."
+            elif verified_count == 0:
+                warning_message = "Aucun chauffeur n'a été vérifié par l'administrateur."
+            elif with_location_count == 0:
+                warning_message = "Aucun chauffeur n'a partagé sa position GPS."
+            else:
+                warning_message = f"Aucun chauffeur disponible dans ce rayon. Essayez d'élargir la zone de recherche."
+        else:
+            warning_message = "Aucun chauffeur disponible pour ce type de véhicule."
+
+    return JsonResponse({
+        'drivers': data,
+        'debug_info': {
+            'total_registered': total_registered,
+            'available_count': available_count,
+            'verified_count': verified_count,
+            'with_location_count': with_location_count,
+            'fully_available_count': fully_available_count,
+        },
+        'warning': warning_message
+    })
+
+
+def get_drivers_by_vehicle_type_api(request):
+    """Récupérer les chauffeurs groupés par type de véhicule avec disponibilité et paiements (API)"""
+    try:
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+        radius = int(request.GET.get('radius', 10000))  # 10km par défaut
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Coordonnées invalides'}, status=400)
+
+    point = Point(lng, lat, srid=4326)
+
+    # Get all active vehicle types
+    vehicle_types = VehicleType.objects.filter(is_active=True)
+    
+    # Import payment models
+    from payment.models import Transaction
+    
+    result = []
+    
+    for vehicle_type in vehicle_types:
+        # Get available drivers for this vehicle type
+        drivers = Driver.objects.filter(
+            is_available=True,
+            is_verified=True,
+            vehicle_type=vehicle_type,
+            current_location__isnull=False
+        ).annotate(
+            distance=Distance('current_location', point)
+        ).filter(
+            distance__lt=radius
+        ).select_related('user', 'vehicle_type').order_by('distance')[:20]
+        
+        drivers_data = []
+        for driver in drivers:
+            # Get payment info for this driver
+            # Total earnings (from completed trips)
+            completed_trips = Trip.objects.filter(
+                driver=driver,
+                status='completed'
+            )
+            total_earnings = sum(float(trip.fare) for trip in completed_trips) if completed_trips else 0
+            total_trips = completed_trips.count()
+            
+            # Recent transactions
+            recent_transactions = Transaction.objects.filter(
+                user=driver.user,
+                status='completed',
+                transaction_type__in=['payment', 'commission']
+            ).order_by('-created_at')[:5]
+            
+            transactions_data = [{
+                'id': str(t.id),
+                'type': t.transaction_type,
+                'amount': str(t.amount),
+                'status': t.status,
+                'created_at': t.created_at.isoformat() if t.created_at else None,
+            } for t in recent_transactions]
+            
+            drivers_data.append({
+                'id': driver.id,
+                'name': f"{driver.user.first_name} {driver.user.last_name}",
+                'phone': driver.user.phone if hasattr(driver.user, 'phone') else None,
+                'vehicle_type': driver.vehicle_type.name if driver.vehicle_type else None,
+                'rating': float(driver.rating) if driver.rating else None,
+                'total_trips': total_trips,
+                'total_earnings': total_earnings,
+                'is_available': driver.is_available,
+                'is_verified': driver.is_verified,
+                'distance': float(driver.distance.m) if driver.distance else None,
+                'lat': driver.current_location.y if driver.current_location else None,
+                'lng': driver.current_location.x if driver.current_location else None,
+                'license_number': driver.license_number if driver.license_number else None,
+                'vehicle_plate': driver.vehicle_plate if driver.vehicle_plate else None,
+                'vehicle_model': driver.vehicle_model if driver.vehicle_model else None,
+                'vehicle_color': driver.vehicle_color if driver.vehicle_color else None,
+                'recent_transactions': transactions_data,
+            })
+        
+        # Get base price for this vehicle type
+        base_price = float(vehicle_type.base_price) if vehicle_type.base_price else 0
+        price_per_km = float(vehicle_type.price_per_km) if vehicle_type.price_per_km else 0
+        capacity = vehicle_type.capacity if vehicle_type.capacity else 1
+        
+        result.append({
+            'vehicle_type': {
+                'id': vehicle_type.id,
+                'name': vehicle_type.name,
+                'display_name': vehicle_type.get_name_display() if hasattr(vehicle_type, 'get_name_display') else vehicle_type.name,
+                'base_price': base_price,
+                'price_per_km': price_per_km,
+                'capacity': capacity,
+            },
+            'drivers_count': len(drivers_data),
+            'available_count': len([d for d in drivers_data if d['is_available']]),
+            'drivers': drivers_data,
+        })
+    
+    return JsonResponse({
+        'vehicle_types': result,
+        'search_location': {
+            'lat': lat,
+            'lng': lng,
+            'radius': radius
+        }
+    })
 
 
 def shared_ride(request):

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.contrib.gis.db import models as gis_models
 from accounts.models import User
 
 class VehicleType(models.Model):
@@ -105,10 +106,10 @@ class Driver(models.Model):
     )
     
     # Géolocalisation
-    current_location = models.CharField(
-        max_length=50,
+    current_location = gis_models.PointField(
         null=True,
-        blank=True
+        blank=True,
+        srid=4326
     )
     last_location_update = models.DateTimeField(
         null=True,
@@ -140,7 +141,8 @@ class Driver(models.Model):
     
     def update_location(self, lat, lng):
         """Mettre à jour la position du chauffeur"""
-        self.current_location = f"{lat},{lng}"
+        from django.contrib.gis.geos import Point
+        self.current_location = Point(lng, lat, srid=4326)
         self.last_location_update = timezone.now()
         self.save(update_fields=['current_location', 'last_location_update'])
     
@@ -196,16 +198,16 @@ class Trip(models.Model):
         max_length=255,
         verbose_name=_("Adresse de prise en charge")
     )
-    pickup_location = models.CharField(
-        max_length=50,
+    pickup_location = gis_models.PointField(
+        srid=4326,
         verbose_name=_("Position de prise en charge")
     )
     dropoff_address = models.CharField(
         max_length=255,
         verbose_name=_("Adresse de destination")
     )
-    dropoff_location = models.CharField(
-        max_length=50,
+    dropoff_location = gis_models.PointField(
+        srid=4326,
         verbose_name=_("Position de destination")
     )
     

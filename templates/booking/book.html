@@ -193,19 +193,74 @@
                             </div>
                         </div>
                         
-                        <!-- Payment Method -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Mode de paiement</label>
-                            <select name="payment_method" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
-                                <option value="cash">Especes</option>
-                                <option value="mobile_money">Mobile Money</option>
-                                <option value="orange_money">Orange Money</option>
-                                <option value="card">Carte bancaire</option>
-                            </select>
+                       
+                        
+                        <!-- Driver Selection Section (Hidden initially) -->
+                        <div id="driver-selection-section" class="hidden">
+                            <hr class="my-4 border-gray-200">
+                            
+                            <!-- Selected Driver Display -->
+                            <div id="selected-driver-display" class="hidden mb-4">
+                                <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center">
+                                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                                <i class="fas fa-check text-green-500"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-green-800">Chauffeur selectionne</p>
+                                                <p class="text-sm text-green-600" id="selected-driver-name">--</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" onclick="clearDriverSelection()" class="text-gray-400 hover:text-red-500">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Available Drivers List -->
+                            <div id="drivers-list" class="space-y-3 max-h-64 overflow-y-auto">
+                                <!-- Drivers will be loaded here via JavaScript -->
+                            </div>
+                            
+                            <!-- Loading Drivers -->
+                            <div id="drivers-loading" class="hidden text-center py-4">
+                                <div class="loading-spinner mx-auto mb-2" style="width:24px;height:24px;"></div>
+                                <p class="text-sm text-gray-500">Recherche de chauffeurs...</p>
+                            </div>
+                            
+                            <!-- No Drivers Found -->
+                            <div id="no-drivers" class="hidden text-center py-4">
+                                <i class="fas fa-car text-gray-300 text-3xl mb-2"></i>
+                                <p class="text-gray-500">Aucun chauffeur disponible</p>
+                                <p class="text-sm text-gray-400">Essayez avec un autre type de vehicule</p>
+                            </div>
                         </div>
                         
-                        <!-- Submit -->
-                        <button type="submit" id="submit-btn" class="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        <!-- Payment Method (Hidden until driver selected) -->
+                        <div id="payment-section" class="hidden">
+                            <hr class="my-4 border-gray-200">
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Mode de paiement</label>
+                                <select name="payment_method" id="payment-method-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                                    <option value="cash">Especes</option>
+                                    <option value="mobile_money">Mobile Money</option>
+                                    <option value="orange_money">Orange Money</option>
+                                    <option value="card">Carte bancaire</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Submit -->
+                            <button type="submit" id="submit-btn" class="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-check mr-2"></i>
+                                Confirmer et payer
+                            </button>
+                        </div>
+                        
+                        <!-- Initial Submit (Hidden after driver search) -->
+                        <button type="button" id="initial-submit-btn" class="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" onclick="validateAndSearchDrivers()">
                             <i class="fas fa-taxi mr-2"></i>
                             Rechercher un chauffeur
                         </button>
@@ -830,6 +885,302 @@
             label.innerHTML = '<i class="fas fa-users text-orange-500 mr-1"></i><strong>Covoiturage</strong> (-30%)';
         }
     });
+    
+    // ===========================================
+    // Driver Search and Selection Functions
+    // ===========================================
+    
+    // Selected driver data
+    let selectedDriver = null;
+    let driverMarkers = [];
+    let availableDrivers = [];
+    
+    // Validate form and search drivers
+    function validateAndSearchDrivers() {
+        const pickupLat = document.getElementById('id_pickup_lat').value;
+        const dropoffLat = document.getElementById('id_dropoff_lat').value;
+        
+        if (!pickupLat || !dropoffLat) {
+            alert('Veuillez selectionner un point de depart et une destination.');
+            return;
+        }
+        
+        searchAvailableDrivers();
+    }
+    
+    // Search for available drivers
+    async function searchAvailableDrivers() {
+        const pickupLat = document.getElementById('id_pickup_lat').value;
+        const pickupLng = document.getElementById('id_pickup_lng').value;
+        const dropoffLat = document.getElementById('id_dropoff_lat').value;
+        const dropoffLng = document.getElementById('id_dropoff_lng').value;
+        
+        // Get selected vehicle type
+        const vehicleTypeInput = document.querySelector('input[name="vehicle_type"]:checked');
+        const vehicleTypeId = vehicleTypeInput ? vehicleTypeInput.value : '';
+        
+        if (!pickupLat || !pickupLng || !dropoffLat || !dropoffLng) {
+            alert('Veuillez selectionner un point de depart et une destination.');
+            return;
+        }
+        
+        // Show loading state
+        document.getElementById('drivers-loading').classList.remove('hidden');
+        document.getElementById('drivers-list').classList.add('hidden');
+        document.getElementById('no-drivers').classList.add('hidden');
+        document.getElementById('driver-selection-section').classList.remove('hidden');
+        document.getElementById('initial-submit-btn').classList.add('hidden');
+        
+        // Calculate center point for search
+        const centerLat = (parseFloat(pickupLat) + parseFloat(dropoffLat)) / 2;
+        const centerLng = (parseFloat(pickupLng) + parseFloat(dropoffLng)) / 2;
+        
+        try {
+            const response = await fetch(`/api/booking/drivers/search/?lat=${centerLat}&lng=${centerLng}&vehicle_type=${vehicleTypeId}&radius=10000`, {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+            
+            const data = await response.json();
+            
+            document.getElementById('drivers-loading').classList.add('hidden');
+            
+            if (data.drivers && data.drivers.length > 0) {
+                availableDrivers = data.drivers;
+                displayDriversOnMap(data.drivers);
+                displayDriversList(data.drivers);
+                document.getElementById('drivers-list').classList.remove('hidden');
+            } else {
+                // Afficher le message d'avertissement de l'API
+                const noDriversEl = document.getElementById('no-drivers');
+                noDriversEl.classList.remove('hidden');
+                
+                if (data.warning) {
+                    // Remplacer le message par défaut par le message de l'API
+                    const messageEl = noDriversEl.querySelector('p.text-gray-500');
+                    const hintEl = noDriversEl.querySelector('p.text-sm.text-gray-400');
+                    if (messageEl) messageEl.textContent = data.warning;
+                    if (hintEl) hintEl.style.display = 'none';
+                }
+                
+                // Afficher les infos de debug en console pour le développement
+                if (data.debug_info) {
+                    console.log('Debug info - Chauffeurs:', data.debug_info);
+                }
+            }
+            
+        } catch (error) {
+            console.error('Erreur lors de la recherche de chauffeurs:', error);
+            document.getElementById('drivers-loading').classList.add('hidden');
+            document.getElementById('no-drivers').classList.remove('hidden');
+        }
+    }
+    
+    // Display drivers on map
+    function displayDriversOnMap(drivers) {
+        // Clear existing driver markers
+        driverMarkers.forEach(marker => marker.setMap(null));
+        driverMarkers = [];
+        
+        drivers.forEach(driver => {
+            if (driver.lat && driver.lng) {
+                const marker = new google.maps.Marker({
+                    position: { lat: driver.lat, lng: driver.lng },
+                    map: map,
+                    icon: createDriverMarkerIcon(driver.vehicle_type),
+                    title: driver.name,
+                    animation: google.maps.Animation.DROP
+                });
+                
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="padding: 10px; min-width: 150px;">
+                            <strong>${driver.name}</strong><br>
+                            <span style="color: #666;">${driver.vehicle_type}</span><br>
+                            <span style="color: #f97316;">★ ${driver.rating || 'Nouveau'}</span><br>
+                            <span style="color: #16a34a;">${driver.distance ? driver.distance.toFixed(1) + ' km' : ''}</span>
+                        </div>
+                    `
+                });
+                
+                marker.addListener('click', () => {
+                    infoWindow.open(map, marker);
+                });
+                
+                driverMarkers.push(marker);
+            }
+        });
+        
+        // Fit map to show all drivers
+        if (driverMarkers.length > 0) {
+            const bounds = new google.maps.LatLngBounds();
+            driverMarkers.forEach(marker => bounds.extend(marker.getPosition()));
+            // Also include pickup and dropoff
+            if (pickupMarker) bounds.extend(pickupMarker.getPosition());
+            if (dropoffMarker) bounds.extend(dropoffMarker.getPosition());
+            map.fitBounds(bounds);
+        }
+    }
+    
+    // Create driver marker icon based on vehicle type
+    function createDriverMarkerIcon(vehicleType) {
+        let color = '#f97316'; // orange default
+        let icon = 'fa-car';
+        
+        if (vehicleType === 'moto') {
+            color = '#3b82f6'; // blue
+            icon = 'fa-motorcycle';
+        } else if (vehicleType === 'van') {
+            color = '#8b5cf6'; // purple
+            icon = 'fa-shuttle-van';
+        } else if (vehicleType === 'vip') {
+            color = '#eab308'; // gold
+            icon = 'fa-star';
+        }
+        
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 40" width="32" height="40">
+            <path fill="${color}" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 28 12 28s12-19 12-28c0-6.6-5.4-12-12-12z"/>
+            <circle fill="white" cx="12" cy="10" r="5"/>
+        </svg>`;
+        
+        return {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+            scaledSize: new google.maps.Size(32, 40),
+            anchor: new google.maps.Point(16, 40)
+        };
+    }
+    
+    // Display drivers list
+    function displayDriversList(drivers) {
+        const listContainer = document.getElementById('drivers-list');
+        listContainer.innerHTML = '';
+        
+        drivers.forEach(driver => {
+            const driverCard = document.createElement('div');
+            driverCard.className = 'driver-card p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition';
+            driverCard.onclick = () => selectDriver(driver);
+            
+            const vehicleIcon = getVehicleIcon(driver.vehicle_type);
+            
+            driverCard.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas ${vehicleIcon} text-gray-500"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">${driver.name}</p>
+                            <p class="text-xs text-gray-500">${driver.vehicle_type}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-orange-500">${driver.distance ? driver.distance.toFixed(1) + ' km' : ''}</p>
+                        <p class="text-xs text-gray-500">${driver.rating ? '★ ' + driver.rating.toFixed(1) : 'Nouveau'}</p>
+                    </div>
+                </div>
+            `;
+            
+            listContainer.appendChild(driverCard);
+        });
+    }
+    
+    // Get vehicle icon
+    function getVehicleIcon(vehicleType) {
+        switch(vehicleType) {
+            case 'moto': return 'fa-motorcycle';
+            case 'van': return 'fa-shuttle-van';
+            case 'vip': return 'fa-star';
+            default: return 'fa-car';
+        }
+    }
+    
+    // Select a driver
+    function selectDriver(driver) {
+        selectedDriver = driver;
+        
+        // Update UI to show selected driver
+        document.getElementById('selected-driver-display').classList.remove('hidden');
+        document.getElementById('selected-driver-name').textContent = driver.name;
+        
+        // Highlight selected driver in list
+        const cards = document.querySelectorAll('.driver-card');
+        cards.forEach(card => {
+            card.classList.remove('border-orange-500', 'bg-orange-50');
+            card.classList.add('border-gray-200');
+        });
+        
+        // Show payment section
+        document.getElementById('payment-section').classList.remove('hidden');
+        
+        // Add hidden input for driver selection
+        const form = document.getElementById('booking-form');
+        let driverInput = document.getElementById('selected-driver-id');
+        if (!driverInput) {
+            driverInput = document.createElement('input');
+            driverInput.type = 'hidden';
+            driverInput.id = 'selected-driver-id';
+            driverInput.name = 'selected_driver_id';
+            form.appendChild(driverInput);
+        }
+        driverInput.value = driver.id;
+        
+        // Scroll to payment section
+        document.getElementById('payment-section').scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    // Clear driver selection
+    function clearDriverSelection() {
+        selectedDriver = null;
+        
+        // Hide selected driver display
+        document.getElementById('selected-driver-display').classList.add('hidden');
+        
+        // Reset driver list highlighting
+        const cards = document.querySelectorAll('.driver-card');
+        cards.forEach(card => {
+            card.classList.remove('border-orange-500', 'bg-orange-50');
+            card.classList.add('border-gray-200');
+        });
+        
+        // Hide payment section
+        document.getElementById('payment-section').classList.add('hidden');
+        
+        // Remove hidden input
+        const driverInput = document.getElementById('selected-driver-id');
+        if (driverInput) {
+            driverInput.remove();
+        }
+    }
+    
+    // Form submission handler
+    document.getElementById('booking-form').addEventListener('submit', function(e) {
+        if (!selectedDriver) {
+            e.preventDefault();
+            alert('Veuillez selectionner un chauffeur.');
+            return;
+        }
+        
+        const paymentMethod = document.getElementById('payment-method-select').value;
+        // Store payment method in a hidden input if needed
+        console.log('Booking with driver:', selectedDriver.name, 'Payment method:', paymentMethod);
+    });
+    
+    // Get cookie helper function (for CSRF)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
 </script>
 {% endblock %}
 
