@@ -9,9 +9,16 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Mapbox GL JS -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <!-- Google Maps API -->
+    <script>
+        // Global Google Maps callback
+        function initGoogleMapsAPI() {
+            // Dispatch custom event for other scripts to listen to
+            const event = new Event('googleMapsLoaded');
+            document.dispatchEvent(event);
+        }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBV9FAmy_6-ODGG-Dg45m8zj5tte9xkxrY&libraries=places,geometry&callback=initGoogleMapsAPI" async defer></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -23,7 +30,7 @@
 </head>
 <body class="bg-gray-50 font-sans">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <nav class="bg-white shadow-lg sticky top-0 z-50" x-data="{ mobileMenuOpen: false }">
         <div class="max-w-7xl mx-auto px-4">
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
@@ -40,44 +47,39 @@
                 <div class="hidden md:flex items-center space-x-8">
                     <a href="{% url 'home' %}" class="text-gray-700 hover:text-orange-500 transition">Accueil</a>
                     <a href="{% url 'about' %}" class="text-gray-700 hover:text-orange-500 transition">À propos</a>
-                    <a href="{% url 'contact' %}" class="text-gray-700 hover:text-orange-500 transition">Contact</a>
-                    
+                    <a href="{% url 'contact' %}" class="text-gray-700 hover:text-orange-500 transition">Reserver</a>
+
                     {% if user.is_authenticated %}
                         <a href="{% url 'booking:book' %}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
                             <i class="fas fa-taxi mr-2"></i>Commander
                         </a>
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open" class="flex items-center space-x-2 text-gray-700 hover:text-orange-500">
-                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                    {% if user.avatar %}
-                                        <img src="{{ user.avatar.url }}" alt="" class="w-8 h-8 rounded-full">
-                                    {% else %}
-                                        <i class="fas fa-user"></i>
-                                    {% endif %}
-                                </div>
-                                <span>{{ user.get_full_name|default:user.phone }}</span>
-                                <i class="fas fa-chevron-down text-sm"></i>
+
+                        <!-- User Dropdown Menu -->
+                        <div class="relative" x-data="{ userMenuOpen: false }">
+                            <button @click="userMenuOpen = !userMenuOpen" class="flex items-center text-gray-700 hover:text-orange-500 transition">
+                                <i class="fas fa-user-circle text-2xl mr-2"></i>
+                                {{ user.get_full_name|default:user.phone }}
+                                <i class="fas fa-chevron-down ml-1"></i>
                             </button>
-                            
-                            <div x-show="open" @click.away="open = false" class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 hidden">
-                                <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50">
-                                    <i class="fas fa-tachometer-alt mr-2"></i>Tableau de bord
-                                </a>
-                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50">
-                                    <i class="fas fa-user mr-2"></i>Mon profil
-                                </a>
-                                <a href="{% url 'booking:history' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50">
-                                    <i class="fas fa-history mr-2"></i>Mes courses
-                                </a>
-                                <hr class="my-2">
-                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-50">
-                                    <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
-                                </a>
+
+                            <div x-show="userMenuOpen" @click.away="userMenuOpen = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                                <div class="py-1">
+                                    <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700">
+                                        <i class="fas fa-tachometer-alt mr-2"></i>Tableau de bord
+                                    </a>
+                                    <a href="{% url 'booking:history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700">
+                                        <i class="fas fa-history mr-2"></i>Mes courses
+                                    </a>
+                                    <hr class="my-1">
+                                    <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     {% else %}
-                        <a href="{% url 'login' %}" class="text-gray-700 hover:text-orange-500 transition">Connexion</a>
-                        <a href="{% url 'register' %}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
+                        <a href="{% url 'accounts:login' %}" class="text-gray-700 hover:text-orange-500 transition">Connexion</a>
+                        <a href="{% url 'accounts:register' %}" class="bg-orange-500 text-white px-6 py-2 rounded-lg hover:bg-orange-600 transition">
                             Inscription
                         </a>
                     {% endif %}
@@ -85,13 +87,46 @@
                 
                 <!-- Mobile menu button -->
                 <div class="md:hidden flex items-center">
-                    <button class="text-gray-700 hover:text-orange-500">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-700 hover:text-orange-500">
                         <i class="fas fa-bars text-2xl"></i>
                     </button>
                 </div>
             </div>
         </div>
     </nav>
+
+    <!-- Mobile Menu -->
+    <div x-show="mobileMenuOpen" @click.away="mobileMenuOpen = false" class="md:hidden bg-white shadow-lg border-t">
+        <div class="px-4 py-4 space-y-4">
+            <a href="{% url 'home' %}" class="block text-gray-700 hover:text-orange-500 transition">Accueil</a>
+            <a href="{% url 'about' %}" class="block text-gray-700 hover:text-orange-500 transition">À propos</a>
+            <a href="{% url 'contact' %}" class="block text-gray-700 hover:text-orange-500 transition">Contact</a>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'booking:book' %}" class="block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+                    <i class="fas fa-taxi mr-2"></i>Réserver
+                </a>
+
+                <div class="border-t pt-4 space-y-2">
+                    <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50 rounded">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Tableau de bord
+                    </a>
+                    <a href="{% url 'booking:history' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50 rounded">
+                        <i class="fas fa-history mr-2"></i>Mes courses
+                    </a>
+                    <hr class="my-2">
+                    <a href="{% url 'accounts:logout' %}" class="block px-4 py-2 text-red-600 hover:bg-red-50 rounded">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                    </a>
+                </div>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="block text-gray-700 hover:text-orange-500 transition">Connexion</a>
+                <a href="{% url 'accounts:register' %}" class="block bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+                    Inscription
+                </a>
+            {% endif %}
+        </div>
+    </div>
 
     <!-- Messages -->
     {% if messages %}
@@ -129,7 +164,7 @@
                         <li><a href="{% url 'home' %}" class="text-gray-400 hover:text-orange-500">Accueil</a></li>
                         <li><a href="{% url 'about' %}" class="text-gray-400 hover:text-orange-500">À propos</a></li>
                         <li><a href="{% url 'contact' %}" class="text-gray-400 hover:text-orange-500">Contact</a></li>
-                        <li><a href="{% url 'booking:book' %}" class="text-gray-400 hover:text-orange-500">Commander</a></li>
+                        <li><a href="{% url 'booking:book' %}" class="text-gray-400 hover:text-orange-500">Réserver</a></li>
                     </ul>
                 </div>
                 
@@ -149,8 +184,8 @@
                     <h3 class="text-lg font-semibold mb-4">Contact</h3>
                     <ul class="space-y-2 text-gray-400">
                         <li><i class="fas fa-map-marker-alt mr-2"></i>Douala, Cameroun</li>
-                        <li><i class="fas fa-phone mr-2"></i>+237 6XX XXX XXX</li>
-                        <li><i class="fas fa-envelope mr-2"></i>contact@movenow.cm</li>
+                        <li><i class="fas fa-phone mr-2"></i>+237 686 865 451</li>
+                        <li><i class="fas fa-envelope mr-2"></i>Moreldev237@gmail.com</li>
                     </ul>
                 </div>
             </div>
@@ -158,11 +193,11 @@
             <hr class="border-gray-800 my-8">
             
             <div class="flex flex-col md:flex-row justify-between items-center">
-                <p class="text-gray-400">© 2024 MoveNow. Tous droits réservés.</p>
+                <p class="text-gray-400">© 2026 MoveNow. Tous droits réservés.</p>
                 <div class="flex space-x-4 mt-4 md:mt-0">
                     <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-facebook fa-lg"></i></a>
                     <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-twitter fa-lg"></i></a>
-                    <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-instagram fa-lg"></i></a>
+                    <a href="#" class="text-gray-400 hover:text-orange-500"><i class="fab fa-whatsapp fa-lg"></i></a>
                 </div>
             </div>
         </div>
@@ -177,4 +212,3 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
-

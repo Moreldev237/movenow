@@ -1,90 +1,226 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Connexion - MoveNow{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <a href="{% url 'home' %}" class="inline-flex items-center space-x-2">
-                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-motorcycle text-white text-2xl"></i>
-                </div>
-                <span class="text-3xl font-bold text-gray-800">Move<span class="text-orange-500">Now</span></span>
-            </a>
-        </div>
-        
-        <!-- Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
+<!-- Premium Background with Layered Gradients -->
+<div class="min-h-screen relative overflow-hidden">
+    <!-- Animated Background Layers -->
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-orange-600"></div>
+    <div class="absolute inset-0 bg-gradient-to-tl from-orange-500/20 via-transparent to-blue-500/20 animate-pulse"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10"></div>
+
+    <!-- Floating Particles -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full">
+            <!-- Logo with Glow Effect -->
+            <div class="text-center mb-8">
+                <a href="{% url 'home' %}" class="inline-flex items-center space-x-2 group">
+                    <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/50 group-hover:shadow-orange-500/75 transition-all duration-300">
+                        <i class="fas fa-motorcycle text-white text-2xl"></i>
+                    </div>
+                    <span class="text-3xl font-bold text-white drop-shadow-lg">Move<span class="text-orange-400">Now</span></span>
+                </a>
+            </div>
+
+            <!-- Glassmorphism Card -->
+            <div class="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden">
+                <!-- Subtle Inner Glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-3xl"></div>
             <h2 class="text-2xl font-bold text-gray-800 text-center mb-2">Bon retour!</h2>
-            <p class="text-gray-500 text-center mb-6">Connectez-vous à votre compte</p>
+            <p class="text-gray-500 text-center mb-6">Connectez-vous simplement</p>
             
-            <!-- Social Login -->
-            <div class="flex gap-4 mb-6">
-                <a href="#" class="flex-1 flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                    <i class="fab fa-google text-red-500 mr-2"></i>
-                    <span class="text-sm font-medium">Google</span>
-                </a>
-                <a href="#" class="flex-1 flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                    <i class="fab fa-facebook text-blue-600 mr-2"></i>
-                    <span class="text-sm font-medium">Facebook</span>
-                </a>
+                <!-- Success/Error Messages -->
+                {% if messages %}
+                <div class="mb-4 relative z-10">
+                    {% for message in messages %}
+                    <div class="p-3 rounded-xl backdrop-blur-sm border {% if message.tags == 'error' %}bg-red-500/20 text-red-200 border-red-500/30{% else %}bg-green-500/20 text-green-200 border-green-500/30{% endif %} text-sm mb-2 shadow-lg">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            
+                    <!-- Login Form -->
+                    <form method="POST" class="space-y-4 relative z-10">
+                        {% csrf_token %}
+
+                        <!-- Username (Email or Phone) -->
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-2">Email ou Téléphone *</label>
+                            <div class="relative">
+                                {{ form.username }}
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-user text-white/50"></i>
+                                </div>
+                            </div>
+                            {% if form.username.errors %}
+                                <p class="text-red-300 text-xs mt-1">{{ form.username.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.username.help_text %}
+                                <p class="text-white/60 text-xs mt-1">{{ form.username.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-2">Mot de passe *</label>
+                            <div class="relative">
+                                {{ form.password }}
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-white/50"></i>
+                                </div>
+                                <button type="button" class="password-toggle absolute inset-y-0 right-0 px-3 flex items-center text-white/50 hover:text-white/80 transition-colors" data-target="id_password">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                                <p class="text-red-300 text-xs mt-1">{{ form.password.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center cursor-pointer group">
+                                {{ form.remember_me }}
+                                <span class="ml-2 text-sm text-white/80 group-hover:text-white transition-colors">Se souvenir de moi</span>
+                            </label>
+                            <a href="{% url 'accounts:password_reset_request' %}" class="text-sm text-orange-300 hover:text-orange-200 transition-colors hover:underline">Mot de passe oublié?</a>
+                        </div>
+
+                        <!-- Tips -->
+                        <div class="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 backdrop-blur-sm">
+                            <p class="text-blue-200 text-xs">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Connexion facile :</strong> Utilisez votre email OU votre numéro de téléphone
+                                pour vous connecter. Pas besoin de se souvenir lequel vous avez utilisé !
+                            </p>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-orange-500/25 transform hover:scale-[1.02]">
+                            <i class="fas fa-sign-in-alt mr-2"></i>Se connecter
+                        </button>
+                    </form>
+            
+                <!-- Register Link -->
+                <p class="text-center mt-6 text-white/70 relative z-10">
+                    Pas encore de compte?
+                    <a href="{% url 'accounts:register' %}" class="text-orange-300 font-medium hover:text-orange-200 transition-colors hover:underline ml-1">S'inscrire</a>
+                </p>
             </div>
-            
-            <div class="relative mb-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">ou</span>
-                </div>
-            </div>
-            
-            <!-- Login Form -->
-            <form method="POST" class="space-y-4">
-                {% csrf_token %}
-                
-                <!-- Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email ou Téléphone</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Password -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-                    {{ form.password }}
-                    {% if form.password.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.password.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Remember Me & Forgot Password -->
-                <div class="flex items-center justify-between">
-                    <label class="flex items-center">
-                        <input type="checkbox" class="h-4 w-4 text-orange-500 border-gray-300 rounded">
-                        <span class="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
-                    </label>
-                    <a href="{% url 'password_reset_request' %}" class="text-sm text-orange-500 hover:underline">Mot de passe oublié?</a>
-                </div>
-                
-                <!-- Submit -->
-                <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
-                    Se connecter
-                </button>
-            </form>
-            
-            <!-- Register Link -->
-            <p class="text-center mt-6 text-gray-600">
-                Pas encore de compte? 
-                <a href="{% url 'register' %}" class="text-orange-500 font-medium hover:underline">S'inscrire</a>
-            </p>
         </div>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_css %}
+<style>
+    /* Floating Particles Animation */
+    .particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        animation: float 20s infinite linear;
+    }
+
+    .particle-1 {
+        width: 4px;
+        height: 4px;
+        top: 20%;
+        left: 10%;
+        animation-delay: 0s;
+    }
+
+    .particle-2 {
+        width: 6px;
+        height: 6px;
+        top: 60%;
+        left: 80%;
+        animation-delay: 5s;
+    }
+
+    .particle-3 {
+        width: 3px;
+        height: 3px;
+        top: 40%;
+        left: 60%;
+        animation-delay: 10s;
+    }
+
+    .particle-4 {
+        width: 5px;
+        height: 5px;
+        top: 80%;
+        left: 30%;
+        animation-delay: 15s;
+    }
+
+    .particle-5 {
+        width: 4px;
+        height: 4px;
+        top: 10%;
+        left: 90%;
+        animation-delay: 20s;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px) translateX(0px);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100vh) translateX(100px);
+            opacity: 0;
+        }
+    }
+
+    /* Form Input Styling */
+    input[type="text"], input[type="password"], input[type="email"] {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border-radius: 0.75rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 165, 0, 0.5);
+        box-shadow: 0 0 0 3px rgba(255, 165, 0, 0.1);
+        outline: none;
+    }
+
+    input[type="checkbox"] {
+        accent-color: #f97316;
+    }
+
+    /* Placeholder styling */
+    input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'js/auth-validation.js' %}"></script>
+{% endblock %}

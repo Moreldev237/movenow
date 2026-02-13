@@ -7,6 +7,247 @@ document.addEventListener('DOMContentLoaded', function() {
     initAnimations();
 });
 
+// ===========================================
+// Google Maps Helper Functions
+// ===========================================
+
+// Google Maps API Key
+
+const GOOGLE_MAPS_API_KEY = 'AIzaSyD3bMgXddB7pUPSkVvh-mHJCkZfDbgjz10';
+
+
+// Initialize Google Maps (placeholder function)
+function initGoogleMaps() {
+    // This function is used to check if Google Maps is loaded
+    return typeof google !== 'undefined' && google.maps;
+}
+
+// Load Google Maps script dynamically
+function loadGoogleMapsScript(callback) {
+    if (initGoogleMaps()) {
+        callback();
+        return;
+    }
+    
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
+    script.async = true;
+    script.defer = true;
+    script.onload = callback;
+    document.head.appendChild(script);
+}
+
+// Geocode address to coordinates
+function geocodeAddress(address) {
+    return new Promise((resolve, reject) => {
+        if (!initGoogleMaps()) {
+            reject(new Error('Google Maps not loaded'));
+            return;
+        }
+        
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ address: address }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                const location = results[0].geometry.location;
+                resolve({
+                    lat: location.lat(),
+                    lng: location.lng(),
+                    formatted_address: results[0].formatted_address
+                });
+            } else {
+                reject(new Error('Geocoding failed: ' + status));
+            }
+        });
+    });
+}
+
+// Reverse geocode coordinates to address
+function reverseGeocodeCoordinates(lat, lng) {
+    return new Promise((resolve, reject) => {
+        if (!initGoogleMaps()) {
+            reject(new Error('Google Maps not loaded'));
+            return;
+        }
+        
+        const geocoder = new google.maps.Geocoder();
+        const latlng = { lat, lng };
+        
+        geocoder.geocode({ location: latlng }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+                resolve(results[0].formatted_address);
+            } else {
+                reject(new Error('Reverse geocoding failed: ' + status));
+            }
+        });
+    });
+}
+
+// Calculate route between two points
+function calculateRoute(origin, destination) {
+    return new Promise((resolve, reject) => {
+        if (!initGoogleMaps()) {
+            reject(new Error('Google Maps not loaded'));
+            return;
+        }
+        
+        const directionsService = new google.maps.DirectionsService();
+        const request = {
+            origin: origin,
+            destination: destination,
+            travelMode: google.maps.TravelMode.DRIVING,
+            provideRouteAlternatives: false
+        };
+        
+        directionsService.route(request, (response, status) => {
+            if (status === 'OK') {
+                const route = response.routes[0];
+                const leg = route.legs[0];
+                
+                resolve({
+                    distance: leg.distance.value / 1000, // km
+                    duration: leg.duration.value / 60, // minutes
+                    distance_text: leg.distance.text,
+                    duration_text: leg.duration.text,
+                    start_address: leg.start_address,
+                    end_address: leg.end_address
+                });
+            } else {
+                reject(new Error('Directions request failed: ' + status));
+            }
+        });
+    });
+}
+
+// Create a marker on the map
+function createMarker(map, position, options = {}) {
+    if (!initGoogleMaps()) {
+        console.error('Google Maps not loaded');
+        return null;
+    }
+    
+    const defaultIcon = {
+        url: options.icon || 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+        scaledSize: options.scaledSize || new google.maps.Size(32, 32),
+        anchor: options.anchor || new google.maps.Point(16, 32)
+    };
+    
+    const marker = new google.maps.Marker({
+        map: map,
+        position: position,
+        icon: options.icon ? defaultIcon : undefined,
+        title: options.title || '',
+        draggable: options.draggable || false
+    });
+    
+    if (options.infoWindow) {
+        const infoWindow = new google.maps.InfoWindow({
+            content: options.infoWindow
+        });
+        marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+        });
+    }
+    
+    return marker;
+}
+
+// Calculate distance between two points using Haversine formula
+function calculateDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    
+    return distance; // km
+}
+
+// Convert degrees to radians
+function toRad(deg) {
+    return deg * (Math.PI / 180);
+}
+
+// Format coordinates for display
+function formatCoordinates(lat, lng) {
+    const latDir = lat >= 0 ? 'N' : 'S';
+    const lngDir = lng >= 0 ? 'E' : 'W';
+    
+    return `${Math.abs(lat).toFixed(6)}° ${latDir}, ${Math.abs(lng).toFixed(6)}° ${lngDir}`;
+}
+
+// Check if a point is within a radius of another point
+function isWithinRadius(lat1, lng1, lat2, lng2, radiusKm) {
+    const distance = calculateDistance(lat1, lng1, lat2, lng2);
+    return distance <= radiusKm;
+}
+
+// Get current location with high accuracy
+function getCurrentLocationHighAccuracy() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('La géolocalisation n\'est pas supportée'));
+            return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                resolve({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    altitude: position.coords.altitude,
+                    heading: position.coords.heading,
+                    speed: position.coords.speed
+                });
+            },
+            error => {
+                reject(error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+        );
+    });
+}
+
+// Watch location changes
+function watchLocation(callback, errorCallback) {
+    if (!navigator.geolocation) {
+        errorCallback(new Error('La géolocalisation n\'est pas supportée'));
+        return null;
+    }
+    
+    return navigator.geolocation.watchPosition(
+        position => {
+            callback({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+                accuracy: position.coords.accuracy
+            });
+        },
+        errorCallback,
+        {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 30000
+        }
+    );
+}
+
+// Clear location watch
+function clearLocationWatch(watchId) {
+    if (watchId && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+    }
+}
+
 // Mobile Menu Toggle
 function initMobileMenu() {
     const menuButton = document.querySelector('.mobile-menu-button');

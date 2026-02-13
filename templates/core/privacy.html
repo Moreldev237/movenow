@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Confidentialité - MoveNow{% endblock %}
+
+{% block content %}
+<div class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Politique de confidentialité</h1>
+            <p class="text-gray-500">Dernière mise à jour: Janvier 2025</p>
+        </div>
+
+        <!-- Content -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <div class="prose prose-orange max-w-none">
+                <!-- Introduction -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">1. Introduction</h2>
+                    <p class="text-gray-600">
+                        Chez MoveNow, nous prenons très au sérieux la protection de vos données personnelles. Cette politique explique comment nous collectons, utilisons et protégeons vos informations lorsque vous utilisez notre application et nos services.
+                    </p>
+                </section>
+
+                <!-- Data Collection -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">2. Données collectées</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>Nous collectons les informations suivantes:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li><strong>Données d'identification:</strong> Nom, prénom, numéro de téléphone, email</li>
+                            <li><strong>Données de compte:</strong> Photo de profil, préférences</li>
+                            <li><strong>Données de localisation:</strong> Position GPS pendant les courses</li>
+                            <li><strong>Données de paiement:</strong> Historique des transactions</li>
+                            <li><strong>Données d'utilisation:</strong> Historique des courses, évaluations</li>
+                            <li><strong>Données techniques:</strong> Type d'appareil, système d'exploitation</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Data Usage -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">3. Utilisation des données</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>Vos données sont utilisées pour:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li>Créer et gérer votre compte</li>
+                            <li>Mettre en relation avec les chauffeurs</li>
+                            <li>Calculer les tarifs et traiter les paiements</li>
+                            <li>Améliorer nos services et l'expérience utilisateur</li>
+                            <li>Envoyer des notifications importantes (courses, promotions)</li>
+                            <li>Assurer la sécurité des utilisateurs</li>
+                            <li>Respecter nos obligations légales</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Location -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">4. Données de localisation</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>MoveNow collecte des données de localisation pour:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li>Identifier votre position de prise en charge</li>
+                            <li>Suivre votre trajet en temps réel</li>
+                            <li>Calculer les distances et tarifs</li>
+                            <li>Partager votre position avec des proches (si vous le choisissez)</li>
+                        </ul>
+                        <p class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                            <strong>Important:</strong> Vous pouvez désactiver la localisation dans les paramètres de votre appareil, mais certaines fonctionnalités ne seront plus disponibles.
+                        </p>
+                    </div>
+                </section>
+
+                <!-- Sharing -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">5. Partage des données</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>Nous partageons vos données avec:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li><strong>Chauffeurs:</strong> Votre nom, numéro (masqué), évaluation</li>
+                            <li><strong>Passegers:</strong> Nom du chauffeur, plaque, note</li>
+                            <li><strong>Prestataires de paiement:</strong> Pour le traitement des transactions</li>
+                            <li><strong>Autorités:</strong> Sur demande légale (police, justice)</li>
+                            <li><strong>Partenaires d'analyse:</strong> Pour améliorer nos services</li>
+                        </ul>
+                        <p class="mt-4">Nous ne vendons jamais vos données personnelles à des tiers.</p>
+                    </div>
+                </section>
+
+                <!-- Security -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">6. Sécurité des données</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>MoveNow met en œuvre des mesures de sécurité robustes:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li>Cryptage des données sensibles (paiements, mots de passe)</li>
+                            <li>Connexion sécurisée (HTTPS)</li>
+                            <li>Authentification à deux facteurs (optionnel)</li>
+                            <li>Contrôle d'accès strict à nos systèmes</li>
+                            <li>Audits de sécurité réguliers</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Retention -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">7. Conservation des données</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>Nous conservons vos données:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li><strong>Données de compte:</strong> Tant que votre compte est actif</li>
+                            <li><strong>Historique des courses:</strong> 3 ans après la dernière activité</li>
+                            <li><strong>Données de paiement:</strong> Conformément aux obligations légales (10 ans)</li>
+                            <li><strong>Données de localisation:</strong> 30 jours maximum</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <!-- Rights -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">8. Vos droits</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>Conformément à la réglementation, vous disposez des droits suivants:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li><strong>Droit d'accès:</strong> Obtenir une copie de vos données</li>
+                            <li><strong>Droit de rectification:</strong> Corriger des données inexactes</li>
+                            <li><strong>Droit à l'effacement:</strong> Demander la suppression de vos données</li>
+                            <li><strong>Droit à la portabilité:</strong> Recevoir vos données dans un format structuré</li>
+                            <li><strong>Droit d'opposition:</strong> Refuser certains traitements</li>
+                        </ul>
+                        <p class="mt-4">Pour exercer ces droits, contactez: <strong>privacy@movenow.cm</strong></p>
+                    </div>
+                </section>
+
+                <!-- Cookies -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">9. Cookies et technologies similaires</h2>
+                    <div class="space-y-4 text-gray-600">
+                        <p>MoveNow utilise des cookies pour:</p>
+                        <ul class="list-disc list-inside space-y-2 ml-4">
+                            <li>Fonctionnement de l'application</li>
+                            <li>Mémoriser vos préférences</li>
+                            <li>Analyser l'utilisation de nos services</li>
+                            <li>Personnaliser les contenus et publicités</li>
+                        </ul>
+                        <p class="mt-4">Vous pouvez gérer les cookies dans les paramètres de votre navigateur.</p>
+                    </div>
+                </section>
+
+                <!-- Minors -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">10. Mineurs</h2>
+                    <p class="text-gray-600">
+                        MoveNow est destiné aux personnes de 18 ans et plus. Nous ne collectons pas délibérément d'informations sur les mineurs. Si vous êtes parent ou tuteur et pensez que votre enfant nous a fourni des données, contactez-nous immédiatement.
+                    </p>
+                </section>
+
+                <!-- Changes -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">11. Modifications</h2>
+                    <p class="text-gray-600">
+                        Cette politique peut être mise à jour périodiquement. Nous vous encourageons à consulter cette page régulièrement. Les modifications importantes seront communiquées via l'application ou par email.
+                    </p>
+                </section>
+
+                <!-- Contact -->
+                <section class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">12. Nous contacter</h2>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <p class="text-gray-600">Pour toute question concernant cette politique:</p>
+                        <ul class="list-none space-y-2 mt-3 text-gray-600">
+                            <li><i class="fas fa-envelope mr-2"></i><strong>Email:</strong> privacy@movenow.cm</li>
+                            <li><i class="fas fa-phone mr-2"></i><strong>Téléphone:</strong> +237 686 865 451</li>
+                            <li><i class="fas fa-map-marker-alt mr-2"></i><strong>Adresse:</strong> Douala, Cameroun</li>
+                        </ul>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

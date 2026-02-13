@@ -49,15 +49,42 @@ def contact(request):
     """Page Contact"""
     if request.method == 'POST':
         # Traiter le formulaire de contact
-        name = request.POST.get('name')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
         email = request.POST.get('email')
+        phone = request.POST.get('phone')
         message = request.POST.get('message')
-        
-        # TODO: Envoyer l'email
-        
-        messages.success(request, 'Merci pour votre message ! Nous vous répondrons bientôt.')
+
+        # Envoyer l'email
+        from django.core.mail import send_mail
+        from django.conf import settings
+
+        subject = f"Nouveau message de contact de {first_name} {last_name}"
+        email_message = f"""
+Nouveau message de contact depuis le site MoveNow :
+
+Nom complet : {first_name} {last_name}
+Email : {email}
+Téléphone : {phone or 'Non fourni'}
+
+Message :
+{message}
+        """
+
+        try:
+            send_mail(
+                subject=subject,
+                message=email_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=['Moreldev237@gmail.com'],
+                fail_silently=False,
+            )
+            messages.success(request, 'Merci pour votre message ! Nous vous répondrons bientôt.')
+        except Exception as e:
+            messages.error(request, 'Une erreur s\'est produite lors de l\'envoi du message. Veuillez réessayer.')
+
         return redirect('contact')
-    
+
     return render(request, 'core/contact.html')
 
 @login_required
@@ -385,3 +412,230 @@ def ping(request):
         'message': 'Server is running',
         'timestamp': timezone.now().isoformat(),
     })
+
+
+# ============ NEW VIEWS FOR NEW TEMPLATES ============
+
+@login_required
+@driver_required
+def driver_dashboard(request):
+    """Tableau de bord chauffeur"""
+    driver = request.user.driver_profile
+    
+    # Statistiques du jour
+    today = timezone.now().date()
+    today_trips = Trip.objects.filter(
+        driver=driver,
+        created_at__date=today
+    )
+    today_earnings = today_trips.filter(status='completed').aggregate(
+        total=Sum('fare')
+    )['total'] or 0
+    
+    # Semaine
+    week_start = today - timedelta(days=today.weekday())
+    week_trips = Trip.objects.filter(
+        driver=driver,
+        created_at__date__gte=week_start
+    )
+    weekly_earnings = week_trips.filter(status='completed').aggregate(
+        total=Sum('fare')
+    )['total'] or 0
+    
+    # Course en cours
+    current_trip = Trip.objects.filter(
+        driver=driver,
+        status__in=['accepted', 'arrived', 'started']
+    ).first()
+    
+    # Demandes en attente
+    from booking.models import BookingRequest
+    pending_requests = BookingRequest.objects.filter(
+        driver=driver,
+        status='sent'
+    ).select_related('booking', 'booking__passenger', 'driver')[:5]
+    
+    # Courses récentes
+    recent_trips = Trip.objects.filter(
+        driver=driver
+    ).order_by('-created_at')[:5]
+    
+    context = {
+        'driver': driver,
+        'today_earnings': today_earnings,
+        'weekly_earnings': weekly_earnings,
+        'today_trips': today_trips.count(),
+        'weekly_trips': week_trips.count(),
+        'current_trip': current_trip,
+        'pending_requests': pending_requests,
+        'recent_trips': recent_trips,
+    }
+    
+    return render(request, 'core/driver_dashboard.html', context)
+
+
+@login_required
+@fleet_owner_required
+def fleet_dashboard(request):
+    """Tableau de bord flotte"""
+    fleet = get_object_or_404(Fleet, owner=request.user)
+    
+    today = timezone.now().date()
+    
+    # Statistiques
+    active_vehicles = fleet.vehicles.filter(is_active=True).count()
+    active_drivers = fleet.drivers.filter(is_active=True).count()
+    
+    today_trips = Trip.objects.filter(
+        driver__in=fleet.drivers.all(),
+        created_at__date=today
+    ).count()
+    
+    today_revenue = Trip.objects.filter(
+        driver__in=fleet.drivers.all(),
+        completed_at__date=today,
+        status='completed'
+    ).aggregate(total=Sum('fare'))['total'] or 0
+    
+    # Revenus du mois
+    month_start = today.replace(day=1)
+    monthly_revenue = Trip.objects.filter(
+        driver__in=fleet.drivers.all(),
+        completed_at__date__gte=month_start,
+        status='completed'
+    ).aggregate(total=Sum('fare'))['total'] or 0
+    
+    commission_rate = fleet.commission_rate / 100
+    commission = monthly_revenue * commission_rate
+    net_revenue = monthly_revenue - commission
+    
+    # Chauffeurs
+    drivers = fleet.drivers.all()
+    
+    # Véhicules
+    vehicles = fleet.vehicles.all()
+    
+    # Alertes maintenance
+    maintenance_alerts = vehicles.filter(
+        status='maintenance'
+    )[:5]
+    
+    # Revenus de la semaine (pour le graphique)
+    weekly_revenue = []
+    for i in range(7):
+        day = today - timedelta(days=6-i)
+        day_revenue = Trip.objects.filter(
+            driver__in=fleet.drivers.all(),
+            completed_at__date=day,
+            status='completed'
+        ).aggregate(total=Sum('fare'))['total'] or 0
+        weekly_revenue.append({
+            'date': day.strftime('%d/%m'),
+            'amount': day_revenue,
+            'percentage': min(100, (day_revenue / max(monthly_revenue, 1)) * 100) if monthly_revenue > 0 else 0
+        })
+    
+    context = {
+        'fleet': fleet,
+        'active_vehicles': active_vehicles,
+        'active_drivers': active_drivers,
+        'today_trips': today_trips,
+        'today_revenue': today_revenue,
+        'monthly_revenue': monthly_revenue,
+        'commission': commission,
+        'net_revenue': net_revenue,
+        'drivers': drivers,
+        'vehicles': vehicles,
+        'maintenance_alerts': maintenance_alerts,
+        'weekly_revenue': weekly_revenue,
+    }
+    
+    return render(request, 'core/fleet_dashboard.html', context)
+
+
+@login_required
+def schedule_booking(request):
+    """Page de réservation programmée"""
+    vehicle_types = VehicleType.objects.filter(is_active=True)
+    
+    context = {
+        'vehicle_types': vehicle_types,
+    }
+    
+    return render(request, 'core/schedule_booking.html', context)
+
+
+@login_required
+def share_location(request):
+    """Page de partage de position"""
+    # Générer un lien de partage temporaire
+    import secrets
+    share_token = secrets.token_urlsafe(32)
+    
+    # Pour l'exemple, utiliser un lien statique
+    share_url = request.build_absolute_uri(f'/track/shared/{share_token}/')
+    
+    # Vérifier s'il y a une course active
+    active_trip = Trip.objects.filter(
+        passenger=request.user,
+        status__in=['accepted', 'arrived', 'started']
+    ).first()
+    
+    context = {
+        'share_url': share_url,
+        'active_trip': active_trip,
+    }
+    
+    return render(request, 'core/share_location.html', context)
+
+
+def safety(request):
+    """Page de sécurité"""
+    return render(request, 'core/safety.html')
+
+
+def help(request):
+    """Page d'aide et FAQ"""
+    return render(request, 'core/help.html')
+
+
+def terms(request):
+    """Page des conditions générales"""
+    return render(request, 'core/terms.html')
+
+
+def privacy(request):
+    """Page de confidentialité"""
+    return render(request, 'core/privacy.html')
+
+
+@login_required
+def referral(request):
+    """Page de parrainage"""
+    user = request.user
+    
+    # Générer un code de parrainage si nécessaire
+    if not hasattr(user, 'referral_code') or not user.referral_code:
+        user.referral_code = f"{user.first_name[:3].upper()}{user.id:06d}"
+        user.save()
+    
+    # Statistiques
+    from accounts.models import Referral
+    referrals = Referral.objects.filter(
+        referrer=user
+    )
+    referral_count = referrals.count()
+    earned_credits = referrals.filter(
+        status='completed'
+    ).aggregate(total=Sum('bonus'))['total'] or 0
+    pending_referrals = referrals.filter(status='pending').count()
+    
+    context = {
+        'user': user,
+        'referral_count': referral_count,
+        'earned_credits': earned_credits,
+        'pending_referrals': pending_referrals,
+        'referrals': referrals[:10],
+    }
+    
+    return render(request, 'core/referral.html', context)

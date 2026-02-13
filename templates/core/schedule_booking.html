@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+
+{% block title %}Réservation programmée - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">Programmer une course</h1>
+            <p class="text-gray-600 mt-2">Réservez votre trajet pour plus tard</p>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Date & Time -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="far fa-calendar-alt text-orange-500 mr-2"></i>
+                        Date et heure
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                            <input type="date" name="pickup_date" required min="{{ today }}" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Heure</label>
+                            <input type="time" name="pickup_time" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-4 bg-blue-50 rounded-lg">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                            <div>
+                                <p class="font-medium text-blue-800">Recommendation</p>
+                                <p class="text-sm text-blue-600">Nous recommandons de programmer votre course au moins 30 minutes à l'avance pour garantir la disponibilité.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Route -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-map-marker-alt text-orange-500 mr-2"></i>
+                        Trajet
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Pickup -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-circle text-green-500 mr-1 text-xs"></i>
+                                Point de départ
+                            </label>
+                            <div class="address-input-wrapper">
+                                <input type="text" id="id_pickup_address" name="pickup_address" placeholder="Adresse de départ" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                                <button type="button" onclick="useCurrentLocation()" title="Utiliser ma position actuelle" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-orange-500">
+                                    <i class="fas fa-crosshairs"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" id="id_pickup_lat" name="pickup_lat">
+                            <input type="hidden" id="id_pickup_lng" name="pickup_lng">
+                        </div>
+                        
+                        <!-- Dropoff -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                <i class="fas fa-flag text-red-500 mr-1 text-xs"></i>
+                                Destination
+                            </label>
+                            <input type="text" id="id_dropoff_address" name="dropoff_address" placeholder="Adresse de destination" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                            <input type="hidden" id="id_dropoff_lat" name="dropoff_lat">
+                            <input type="hidden" id="id_dropoff_lng" name="dropoff_lng">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Type -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-car text-orange-500 mr-2"></i>
+                        Type de véhicule
+                    </h3>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        {% for vehicle_type in vehicle_types %}
+                        <label class="cursor-pointer">
+                            <input type="radio" name="vehicle_type" value="{{ vehicle_type.id }}" class="sr-only" {% if forloop.first %}checked{% endif %}>
+                            <div class="p-4 border rounded-lg hover:border-orange-500 transition peer-checked:border-orange-500 peer-checked:bg-orange-50">
+                                <div class="flex items-center">
+                                    <i class="fas fa-{% if vehicle_type.name == 'moto' %}motorcycle{% elif vehicle_type.name == 'taxi' %}taxi{% elif vehicle_type.name == 'van' %}shuttle-van{% else %}car{% endif %} text-orange-500 text-xl mr-3"></i>
+                                    <div>
+                                        <p class="font-medium text-gray-800">{{ vehicle_type.get_name_display }}</p>
+                                        <p class="text-sm text-gray-500">{{ vehicle_type.capacity }} personne(s)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-comment-alt text-orange-500 mr-2"></i>
+                        Notes (optionnel)
+                    </h3>
+                    
+                    <textarea name="notes" rows="3" placeholder="Informations supplémentaires pour le chauffeur (ex: numéro de porte, code d'accès...)" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"></textarea>
+                </div>
+
+                <!-- Fare Estimate -->
+                <div class="border-t border-gray-200 pt-6">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">Distance estimée</span>
+                            <span class="font-semibold" id="estimated-distance">-- km</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">Durée estimée</span>
+                            <span class="font-semibold" id="estimated-duration">-- min</span>
+                        </div>
+                        <hr class="my-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-semibold text-gray-800">Prix estimé</span>
+                            <span class="text-2xl font-bold text-orange-500" id="estimated-fare">-- XAF</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-credit-card text-orange-500 mr-2"></i>
+                        Mode de paiement
+                    </h3>
+                    
+                    <select name="payment_method" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        <option value="cash">Espèces</option>
+                        <option value="mobile_money">Mobile Money</option>
+                        <option value="orange_money">Orange Money</option>
+                        <option value="card">Carte bancaire</option>
+                    </select>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex space-x-4">
+                    <a href="{% url 'home' %}" class="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition text-center">
+                        Annuler
+                    </a>
+                    <button type="submit" class="flex-1 bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition shadow-lg">
+                        <i class="fas fa-calendar-check mr-2"></i>
+                        Confirmer la réservation
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-start">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Annulation gratuite</h4>
+                        <p class="text-sm text-gray-600">Vous pouvez annuler gratuitement jusqu'à 30 minutes avant.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <div class="flex items-start">
+                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-bell text-blue-500"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Rappel automatique</h4>
+                        <p class="text-sm text-gray-600">Vous recevez un rappel 15 minutes avant.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for Google Maps API loaded event
+    document.addEventListener('googleMapsLoaded', function() {
+        initAutocomplete();
+    });
+});
+
+function initAutocomplete() {
+    const pickupInput = document.getElementById('id_pickup_address');
+    const dropoffInput = document.getElementById('id_dropoff_address');
+    
+    if (typeof google !== 'undefined' && google.maps.places) {
+        const options = {
+            types: ['address'],
+            componentRestrictions: { country: 'cm' }
+        };
+        
+        new google.maps.places.Autocomplete(pickupInput, options);
+        new google.maps.places.Autocomplete(dropoffInput, options);
+    }
+}
+
+function useCurrentLocation() {
+    if (!navigator.geolocation) {
+        alert('La géolocalisation n\'est pas supportée.');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            const { latitude, longitude } = position.coords;
+            document.getElementById('id_pickup_lat').value = latitude;
+            document.getElementById('id_pickup_lng').value = longitude;
+            
+            // Reverse geocode
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat: latitude, lng: longitude } }, function(results, status) {
+                if (status === 'OK' && results[0]) {
+                    document.getElementById('id_pickup_address').value = results[0].formatted_address;
+                }
+            });
+        },
+        error => {
+            alert('Impossible d\'obtenir votre position.');
+        }
+    );
+}
+</script>
+{% endblock %}
+

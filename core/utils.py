@@ -1,11 +1,17 @@
 import math
 from decimal import Decimal
+import os
+import requests
+from django.conf import settings
+
+# Google Maps API Key from settings or environment
+GOOGLE_MAPS_API_KEY = getattr(settings, 'GOOGLE_MAPS_API_KEY', os.environ.get('GOOGLE_MAPS_API_KEY', ''))
 
 def calculate_route(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng):
     """
     Calculate route distance and duration between two points.
-    For now, uses straight-line distance as a mock implementation.
-    In production, this would integrate with a mapping service like Google Maps or OpenStreetMap.
+    Uses Google Maps Distance Matrix API if API key is available.
+    Falls back to Haversine formula otherwise.
 
     Args:
         pickup_lat (float): Pickup latitude
@@ -16,7 +22,86 @@ def calculate_route(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng):
     Returns:
         dict: {'distance': float in km, 'duration': int in minutes}
     """
-    # Calculate straight-line distance using Haversine formula
+    # Try to use Google Maps API if key is available
+    if GOOGLE_MAPS_API_KEY:
+        try:
+            result = calculate_route_google_maps(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng)
+            if result:
+                return result
+        except Exception as e:
+            # Log the error and fall back to Haversine
+            print(f"Google Maps API error: {e}")
+    
+    # Fall back to Haversine formula
+    return calculate_route_haversine(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng)
+
+
+def calculate_route_google_maps(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng):
+    """
+    Calculate route using Google Maps Distance Matrix API.
+    
+    Args:
+        pickup_lat (float): Pickup latitude
+        pickup_lng (float): Pickup longitude
+        dropoff_lat (float): Dropoff latitude
+        dropoff_lng (float): Dropoff longitude
+        
+    Returns:
+        dict: {'distance': float in km, 'duration': int in minutes}
+        
+    Raises:
+        Exception: If API call fails
+    """
+    if not GOOGLE_MAPS_API_KEY:
+        raise Exception("Google Maps API key not configured")
+    
+    origin = f"{pickup_lat},{pickup_lng}"
+    destination = f"{dropoff_lat},{dropoff_lng}"
+    
+    url = (
+        f"https://maps.googleapis.com/maps/api/distancematrix/json"
+        f"?origins={origin}"
+        f"&destinations={destination}"
+        f"&mode=driving"
+        f"&language=fr"
+        f"&key={GOOGLE_MAPS_API_KEY}"
+    )
+    
+    response = requests.get(url)
+    response.raise_for_status()
+    
+    data = response.json()
+    
+    if data['status'] == 'OK':
+        element = data['rows'][0]['elements'][0]
+        
+        if element['status'] == 'OK':
+            distance_meters = element['distance']['value']  # meters
+            duration_seconds = element['duration']['value']  # seconds
+            
+            return {
+                'distance': round(distance_meters / 1000, 2),  # Convert to km
+                'duration': round(duration_seconds / 60)  # Convert to minutes
+            }
+        else:
+            raise Exception(f"Element status: {element['status']}")
+    else:
+        raise Exception(f"API status: {data['status']}")
+
+
+def calculate_route_haversine(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng):
+    """
+    Calculate straight-line distance using Haversine formula.
+    
+    Args:
+        pickup_lat (float): Pickup latitude
+        pickup_lng (float): Pickup longitude
+        dropoff_lat (float): Dropoff latitude
+        dropoff_lng (float): Dropoff longitude
+
+    Returns:
+        dict: {'distance': float in km, 'duration': int in minutes}
+    """
     R = 6371  # Earth's radius in kilometers
 
     lat1_rad = math.radians(pickup_lat)
@@ -39,6 +124,81 @@ def calculate_route(pickup_lat, pickup_lng, dropoff_lat, dropoff_lng):
         'distance': round(distance, 2),
         'duration': duration_minutes
     }
+
+
+def geocode_address(address):
+    """
+    Geocode an address to coordinates using Google Maps Geocoding API.
+    
+    Args:
+        address (str): The address to geocode
+        
+    Returns:
+        dict: {'lat': float, 'lng': float, 'formatted_address': str}
+        
+    Raises:
+        Exception: If API call fails
+    """
+    if not GOOGLE_MAPS_API_KEY:
+        raise Exception("Google Maps API key not configured")
+    
+    url = (
+        f"https://maps.googleapis.com/maps/api/geocode/json"
+        f"?address={requests.utils.quote(address)}"
+        f"&key={GOOGLE_MAPS_API_KEY}"
+    )
+    
+    response = requests.get(url)
+    response.raise_for_status()
+    
+    data = response.json()
+    
+    if data['status'] == 'OK' and data['results']:
+        result = data['results'][0]
+        location = result['geometry']['location']
+        
+        return {
+            'lat': location['lat'],
+            'lng': location['lng'],
+            'formatted_address': result['formatted_address']
+        }
+    else:
+        raise Exception(f"Geocoding failed: {data['status']}")
+
+
+def reverse_geocode(lat, lng):
+    """
+    Reverse geocode coordinates to an address using Google Maps Geocoding API.
+    
+    Args:
+        lat (float): Latitude
+        lng (float): Longitude
+        
+    Returns:
+        str: Formatted address
+        
+    Raises:
+        Exception: If API call fails
+    """
+    if not GOOGLE_MAPS_API_KEY:
+        raise Exception("Google Maps API key not configured")
+    
+    location = f"{lat},{lng}"
+    url = (
+        f"https://maps.googleapis.com/maps/api/geocode/json"
+        f"?latlng={location}"
+        f"&key={GOOGLE_MAPS_API_KEY}"
+    )
+    
+    response = requests.get(url)
+    response.raise_for_status()
+    
+    data = response.json()
+    
+    if data['status'] == 'OK' and data['results']:
+        return data['results'][0]['formatted_address']
+    else:
+        raise Exception(f"Reverse geocoding failed: {data['status']}")
 
 def estimate_fare(vehicle_type, distance, duration, is_shared=False):
     """

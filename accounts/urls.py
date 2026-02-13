@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = 'accounts'
+
 urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('register/', views.register, name='register'),
@@ -15,4 +17,3 @@ urlpatterns = [
     path('become/fleet/', views.become_fleet_owner, name='become_fleet_owner'),
     path('delete/', views.delete_account, name='delete_account'),
 ]
-

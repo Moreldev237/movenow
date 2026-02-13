@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+
+{% block title %}Aide et FAQ - MoveNow{% endblock %}
+
+{% block content %}
+<div class="py-16">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Centre d'aide</h1>
+            <p class="text-xl text-gray-500">Trouvez rapidement des réponses à vos questions</p>
+        </div>
+
+        <!-- Search -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="relative">
+                <input type="text" placeholder="Rechercher une question..." class="w-full px-6 py-4 pl-12 border rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none text-lg">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl"></i>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <a href="#booking" class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition">
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-ticket-alt text-orange-500 text-xl"></i>
+                </div>
+                <p class="font-medium text-gray-800">Réservation</p>
+            </a>
+            <a href="#payment" class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-credit-card text-green-500 text-xl"></i>
+                </div>
+                <p class="font-medium text-gray-800">Paiement</p>
+            </a>
+            <a href="#account" class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-user text-blue-500 text-xl"></i>
+                </div>
+                <p class="font-medium text-gray-800">Compte</p>
+            </a>
+            <a href="#safety" class="bg-white rounded-xl shadow-sm p-6 text-center hover:shadow-md transition">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i class="fas fa-shield-alt text-red-500 text-xl"></i>
+                </div>
+                <p class="font-medium text-gray-800">Sécurité</p>
+            </a>
+        </div>
+
+        <!-- FAQ Sections -->
+        <div class="space-y-8">
+            <!-- Booking -->
+            <div id="booking" class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-ticket-alt text-orange-500 mr-3"></i>
+                    Réservation
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment réserver une course?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Pour réserver une course:</p>
+                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                <li>Ouvrez l'application MoveNow</li>
+                                <li>Entrez votre destination</li>
+                                <li>Choisissez votre type de véhicule</li>
+                                <li>Sélectionnez un chauffeur</li>
+                                <li>Confirmez votre réservation</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Puis-je programmer une course à l'avance?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Oui! Vous pouvez programmer une course jusqu'à 7 jours à l'avance. Allez dans l'onglet "Programmer" et choisissez la date et l'heure souhaitées.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment annuler une réservation?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Vous pouvez annuler une réservation depuis l'écran de suivi. Notez que des frais d'annulation peuvent s'appliquer selon les conditions.</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Le prix peut-il changer pendant le trajet?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Le prix est calculé à l'avance et reste généralement stable. Cependant, des suppléments peuvent s'appliquer en cas de détour significatif ou de temps d'attente prolongé.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div id="payment" class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-credit-card text-green-500 mr-3"></i>
+                    Paiement
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Quels modes de paiement sont acceptés?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>MoveNow accepte:</p>
+                            <ul class="list-disc list-inside mt-2 space-y-1">
+                                <li>Espèces</li>
+                                <li>Mobile Money (Orange Money, MTN Mobile Money)</li>
+                                <li>Cartes bancaires (Visa, Mastercard)</li>
+                                <li>Solde MoveNow</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment obtenir un remboursement?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Pour les paiements numériques, les remboursements sont traités sous 5-7 jours ouvrés.Contactez le support via l'application.</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment utiliser un code promo?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Entrez votre code promo dans le champ prévu à cet effet lors de la confirmation de votre réservation. La réduction sera automatiquement appliquée.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account -->
+            <div id="account" class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-user text-blue-500 mr-3"></i>
+                    Compte
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment créer un compte?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Télécharger l'application MoveNow et suivez les instructions. Vous aurez besoin d'un numéro de téléphone valide pour vous inscrire.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment réinitialiser mon mot de passe?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Sur l'écran de connexion, cliquez sur "Mot de passe oublié" et suivez les instructions envoyées par SMS ou email.</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment supprimer mon compte?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Allez dans Paramètres > Compte > Supprimer le compte. Cette action est irréversible.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety -->
+            <div id="safety" class="bg-white rounded-2xl shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                    <i class="fas fa-shield-alt text-red-500 mr-3"></i>
+                    Sécurité
+                </h2>
+                
+                <div class="space-y-4">
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Comment sont vérifiés les chauffeurs?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Tous nos chauffeurs passent par un processus de vérification strict incluant:</p>
+                            <ul class="list-disc list-inside mt-2 space-y-1">
+                                <li>Vérification du permis de conduire</li>
+                                <li>Contrôle du casier judiciaire</li>
+                                <li>Vérification des documents du véhicule</li>
+                                <li>Entretien avec notre équipe</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="border-b border-gray-100 pb-4">
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Que faire en cas de problème?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Si vous rencontrez un problème:</p>
+                            <ol class="list-decimal list-inside mt-2 space-y-1">
+                                <li>Utilisez le bouton SOS dans l'application</li>
+                                <li>Contactez le support au +237 686 865 451</li>
+                                <li>Signalez l'incident via l'historique de courses</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button class="faq-question flex items-center justify-between w-full text-left">
+                            <span class="font-medium text-gray-800">Puis-je partager ma position avec quelqu'un?</span>
+                            <i class="fas fa-chevron-down text-gray-400"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-3 text-gray-600">
+                            <p>Oui! Pendant une course, appuyez sur "Partager ma position" pour générer un lien à envoyer à vos proches.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contact Support -->
+        <div class="bg-orange-500 rounded-2xl shadow-lg p-8 mt-12 text-white text-center">
+            <h2 class="text-2xl font-bold mb-4">Vous n'avez pas trouvé votre réponse?</h2>
+            <p class="text-orange-100 mb-6">Notre équipe de support est disponible 24h/24</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="tel:+237686865451" class="inline-flex items-center bg-white text-orange-600 px-6 py-3 rounded-xl font-semibold hover:bg-gray-100 transition">
+                    <i class="fas fa-phone mr-2"></i>Appeler
+                </a>
+                <a href="mailto:support@movenow.cm" class="inline-flex items-center border border-white text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition">
+                    <i class="fas fa-envelope mr-2"></i>Email
+                </a>
+                <a href="#" class="inline-flex items-center border border-white text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/10 transition">
+                    <i class="fab fa-whatsapp mr-2"></i>WhatsApp
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.faq-question').forEach(button => {
+        button.addEventListener('click', function() {
+            const answer = this.nextElementSibling;
+            const icon = this.querySelector('.fa-chevron-down');
+            
+            // Toggle current
+            answer.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+            
+            // Close others
+            document.querySelectorAll('.faq-answer').forEach(a => {
+                if (a !== answer) {
+                    a.classList.add('hidden');
+                }
+            });
+            document.querySelectorAll('.fa-chevron-down').forEach(i => {
+                if (i !== icon) {
+                    i.classList.remove('rotate-180');
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
+

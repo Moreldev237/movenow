@@ -1,126 +1,194 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Inscription - MoveNow{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <a href="{% url 'home' %}" class="inline-flex items-center space-x-2">
-                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
-                    <i class="fas fa-motorcycle text-white text-2xl"></i>
-                </div>
-                <span class="text-3xl font-bold text-gray-800">Move<span class="text-orange-500">Now</span></span>
-            </a>
-        </div>
-        
-        <!-- Card -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h2 class="text-2xl font-bold text-gray-800 text-center mb-2">Créer un compte</h2>
-            <p class="text-gray-500 text-center mb-6">Rejoignez MoveNow dès maintenant</p>
-            
-            <!-- Social Login -->
-            <div class="flex gap-4 mb-6">
-                <a href="#" class="flex-1 flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                    <i class="fab fa-google text-red-500 mr-2"></i>
-                    <span class="text-sm font-medium">Google</span>
-                </a>
-                <a href="#" class="flex-1 flex items-center justify-center py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-                    <i class="fab fa-facebook text-blue-600 mr-2"></i>
-                    <span class="text-sm font-medium">Facebook</span>
+<!-- Premium Background with Layered Gradients -->
+<div class="min-h-screen relative overflow-hidden">
+    <!-- Animated Background Layers -->
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-orange-600"></div>
+    <div class="absolute inset-0 bg-gradient-to-tl from-orange-500/20 via-transparent to-blue-500/20 animate-pulse"></div>
+    <div class="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-pink-500/10"></div>
+
+    <!-- Floating Particles -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+        <div class="particle particle-4"></div>
+        <div class="particle particle-5"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full">
+            <!-- Logo with Glow Effect -->
+            <div class="text-center mb-8">
+                <a href="{% url 'home' %}" class="inline-flex items-center space-x-2 group">
+                    <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/50 group-hover:shadow-orange-500/75 transition-all duration-300">
+                        <i class="fas fa-motorcycle text-white text-2xl"></i>
+                    </div>
+                    <span class="text-3xl font-bold text-white drop-shadow-lg">Move<span class="text-orange-400">Now</span></span>
                 </a>
             </div>
-            
-            <div class="relative mb-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-white text-gray-500">ou</span>
-                </div>
-            </div>
-            
-            <!-- Registration Form -->
-            <form method="POST" class="space-y-4">
-                {% csrf_token %}
-                
-                <!-- Name Fields -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-                        {{ form.first_name }}
-                        {% if form.first_name.errors %}
-                            <p class="text-red-500 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
-                        {% endif %}
+
+            <!-- Glassmorphism Card -->
+            <div class="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 relative overflow-hidden">
+                <!-- Subtle Inner Glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent rounded-3xl"></div>
+                <h2 class="text-2xl font-bold text-white text-center mb-2">Créer un compte</h2>
+                <p class="text-white/70 text-center mb-6">Rejoignez MoveNow en quelques secondes</p>
+
+                <!-- Success/Error Messages -->
+                {% if messages %}
+                <div class="mb-4 relative z-10">
+                    {% for message in messages %}
+                    <div class="p-3 rounded-xl backdrop-blur-sm border {% if message.tags == 'error' %}bg-red-500/20 text-red-200 border-red-500/30{% else %}bg-green-500/20 text-green-200 border-green-500/30{% endif %} text-sm mb-2 shadow-lg">
+                        {{ message }}
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-                        {{ form.last_name }}
-                        {% if form.last_name.errors %}
-                            <p class="text-red-500 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
-                        {% endif %}
-                    </div>
+                    {% endfor %}
                 </div>
-                
-                <!-- Email -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    {{ form.email }}
-                    {% if form.email.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.email.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Phone -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                    {{ form.phone }}
-                    {% if form.phone.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.phone.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Password -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
-                    {{ form.password1 }}
-                    {% if form.password1.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.password1.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Confirm Password -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe</label>
-                    {{ form.password2 }}
-                    {% if form.password2.errors %}
-                        <p class="text-red-500 text-xs mt-1">{{ form.password2.errors.0 }}</p>
-                    {% endif %}
-                </div>
-                
-                <!-- Terms -->
-                <div class="flex items-start">
-                    <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-orange-500 border-gray-300 rounded mt-0.5">
-                    <label for="terms" class="ml-2 text-sm text-gray-600">
-                        J'accepte les <a href="#" class="text-orange-500 hover:underline">conditions d'utilisation</a>
-                        et la <a href="#" class="text-orange-500 hover:underline">politique de confidentialité</a>
-                    </label>
-                </div>
-                
-                <!-- Submit -->
-                <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
-                    Créer mon compte
-                </button>
-            </form>
+                {% endif %}
+            
+                    <!-- Registration Form -->
+                    <form method="POST" class="space-y-4 relative z-10" id="register-form">
+                        {% csrf_token %}
+
+                        <!-- Name Fields -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-2">Prénom *</label>
+                                <div class="relative">
+                                    {{ form.first_name }}
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-user text-white/50"></i>
+                                    </div>
+                                </div>
+                                {% if form.first_name.errors %}
+                                    <p class="text-red-300 text-xs mt-1">{{ form.first_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-white/90 mb-2">Nom *</label>
+                                <div class="relative">
+                                    {{ form.last_name }}
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-user text-white/50"></i>
+                                    </div>
+                                </div>
+                                {% if form.last_name.errors %}
+                                    <p class="text-red-300 text-xs mt-1">{{ form.last_name.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-2">Email *</label>
+                            <div class="relative">
+                                {{ form.email }}
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-envelope text-white/50"></i>
+                                </div>
+                            </div>
+                            {% if form.email.errors %}
+                                <p class="text-red-300 text-xs mt-1">{{ form.email.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.email.help_text %}
+                                <p class="text-white/60 text-xs mt-1">{{ form.email.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Phone -->
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-2">Téléphone *</label>
+                            <div class="relative">
+                                {{ form.phone }}
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-phone text-white/50"></i>
+                                </div>
+                            </div>
+                            {% if form.phone.errors %}
+                                <p class="text-red-300 text-xs mt-1">{{ form.phone.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.phone.help_text %}
+                                <p class="text-white/60 text-xs mt-1">{{ form.phone.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Password -->
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-2">Mot de passe *</label>
+                            <div class="relative">
+                                {{ form.password1 }}
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-white/50"></i>
+                                </div>
+                                <button type="button" class="password-toggle absolute inset-y-0 right-0 px-3 flex items-center text-white/50 hover:text-white/80 transition-colors" data-target="id_password1">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password1.errors %}
+                                <p class="text-red-300 text-xs mt-1">{{ form.password1.errors.0 }}</p>
+                            {% endif %}
+                            {% if form.password1.help_text %}
+                                <p class="text-white/60 text-xs mt-1">{{ form.password1.help_text }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div>
+                            <label class="block text-sm font-medium text-white/90 mb-2">Confirmer le mot de passe *</label>
+                            <div class="relative">
+                                {{ form.password2 }}
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-lock text-white/50"></i>
+                                </div>
+                                <button type="button" class="password-toggle absolute inset-y-0 right-0 px-3 flex items-center text-white/50 hover:text-white/80 transition-colors" data-target="id_password2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.errors %}
+                                <p class="text-red-300 text-xs mt-1">{{ form.password2.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Tips -->
+                        <div class="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 backdrop-blur-sm">
+                            <p class="text-blue-200 text-xs">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Conseils :</strong> Utilisez un numéro de téléphone valide (MTN, Orange ou Nexttel).
+                                Vous pourrez vous connecter avec votre email OU votre numéro de téléphone.
+                            </p>
+                        </div>
+
+                        <!-- Terms -->
+                        <div class="flex items-start">
+                            <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-orange-500 border-white/30 rounded mt-0.5 bg-white/10" checked>
+                            <label for="terms" class="ml-2 text-sm text-white/80">
+                                J'accepte les <a href="#" class="text-orange-300 hover:text-orange-200 transition-colors hover:underline">conditions d'utilisation</a>
+                                et la <a href="#" class="text-orange-300 hover:text-orange-200 transition-colors hover:underline">politique de confidentialité</a>
+                            </label>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white py-3 rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all duration-300 shadow-lg hover:shadow-orange-500/25 transform hover:scale-[1.02]">
+                            <i class="fas fa-user-plus mr-2"></i>Créer mon compte
+                        </button>
+                    </form>
             
             <!-- Login Link -->
             <p class="text-center mt-6 text-gray-600">
                 Déjà un compte? 
-                <a href="{% url 'login' %}" class="text-orange-500 font-medium hover:underline">Se connecter</a>
+                <a href="{% url 'accounts:login' %}" class="text-orange-500 font-medium hover:underline">Se connecter</a>
             </p>
         </div>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_js %}
+{% load static %}
+<script src="{% static 'js/auth-validation.js' %}"></script>
+{% endblock %}

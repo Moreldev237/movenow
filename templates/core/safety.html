@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Sécurité - MoveNow{% endblock %}
+
+{% block content %}
+<div class="py-16 bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Sécurité MoveNow</h1>
+            <p class="text-xl text-gray-500">Votre sécurité est notre priorité absolue</p>
+        </div>
+
+        <!-- Safety Features -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-user-check text-green-500 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Chauffeurs vérifiés</h3>
+                <p class="text-gray-600">Tous nos chauffeurs passent un processus de vérification strict incluant le contrôle des antécédents.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-map-marker-alt text-blue-500 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Suivi en temps réel</h3>
+                <p class="text-gray-600">Suivez votre trajet et partagez votre position avec vos proches en temps réel.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-star text-orange-500 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Système de notation</h3>
+                <p class="text-gray-600">Évaluez votre expérience et aidez-nous à maintenir des standards de qualité élevés.</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                    <i class="fas fa-headset text-purple-500 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Support 24h/24</h3>
+                <p class="text-gray-600">Notre équipe de support est disponible à tout moment pour vous aider en cas de problème.</p>
+            </div>
+        </div>
+
+        <!-- Safety Tips -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>
+                Conseils de sécurité
+            </h2>
+
+            <div class="space-y-6">
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold">1</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-1">Vérifiez le véhicule</h3>
+                        <p class="text-gray-600">Confirmez que la plaque d'immatriculation, la marque et la couleur correspondent à celles indiquées dans l'application.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold">2</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-1">Vérifiez le chauffeur</h3>
+                        <p class="text-gray-600">Assurez-vous que le chauffeur correspond à la photo et aux informations affichées dans l'application.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold">3</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-1">Partagez votre trajet</h3>
+                        <p class="text-gray-600">Utilisez la fonction "Partager ma position" pour que vos proches puissent suivre votre trajet en temps réel.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold">4</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-1">Asseyez-vous à l'arrière</h3>
+                        <p class="text-gray-600">Pour plus de sécurité et de confort, asseyez-vous à l'arrière du véhicule.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold">5</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-1">Gardez vos effets personnels</h3>
+                        <p class="text-gray-600">Ne laissez pas d'objets de valeur dans le véhicule et vérifiez avoir tout pris à la fin du trajet.</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold">6</span>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-1">Portez toujours votre ceinture</h3>
+                        <p class="text-gray-600">La ceinture de sécurité est obligatoire et réduit considérablement les risques en cas d'accident.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Section -->
+        <div class="bg-red-500 rounded-2xl shadow-lg p-8 text-white mb-12">
+            <h2 class="text-2xl font-bold mb-6">
+                <i class="fas fa-exclamation-triangle mr-3"></i>
+                En cas d'urgence
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-semibold mb-3">Numéros d'urgence</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fas fa-phone-alt mr-3 w-6"></i>
+                            <span>Police: 17</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-ambulance mr-3 w-6"></i>
+                            <span>SAMU: 112</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-fire mr-3 w-6"></i>
+                            <span>Pompiers: 18</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-headset mr-3 w-6"></i>
+                            <span>Support MoveNow: +237 686 865 451</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="font-semibold mb-3">Bouton SOS</h3>
+                    <p class="text-red-100 mb-4">Le bouton SOS de l'application vous permet d'alerter rapidement nos équipes et de partager votre position.</p>
+                    <div class="flex items-center">
+                        <button class="bg-white text-red-500 px-6 py-3 rounded-xl font-bold hover:bg-red-50 transition">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            Bouton SOS
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Incident -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-flag text-orange-500 mr-3"></i>
+                Signaler un incident
+            </h2>
+            <p class="text-gray-600 mb-6">
+                Si vous avez rencontré un problème lors d'une course, n'hésitez pas à le signaler. Nous prenons chaque signalement au sérieux.
+            </p>
+
+            <form class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Type d'incident</label>
+                    <select class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        <option>Sélectionnez...</option>
+                        <option>Comportement du chauffeur</option>
+                        <option>Problème de sécurité</option>
+                        <option>Objet perdu</option>
+                        <option>Problème de paiement</option>
+                        <option>Autre</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea rows="4" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none" placeholder="Décrivez l'incident en détail..."></textarea>
+                </div>
+                
+                <button type="submit" class="bg-orange-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-600 transition">
+                    <i class="fas fa-paper-plane mr-2"></i>Signaler
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

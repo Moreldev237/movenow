@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}Devenir chauffeur - MoveNow{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-4xl mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Devenez chauffeur MoveNow</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                Rejoignez notre réseau de chauffeurs et gagnez votre vie en toute flexibilité.
+            </p>
+        </div>
+
+        <!-- Benefits -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Les avantages MoveNow</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-wallet text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Revenus attractifs</h3>
+                    <p class="text-gray-600">Gagnez jusqu'à 300,000 XAF par semaine avec des commissions compétitives.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-clock text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Flexibilité totale</h3>
+                    <p class="text-gray-600">Travaillez quand vous voulez. Vous êtes votre propre patron.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-800 mb-2">Support dédié</h3>
+                    <p class="text-gray-600">Une équipe d'assistance disponible 24h/24 pour vous aider.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Requirements -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Conditions requises</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Permis de conduire valide</h3>
+                        <p class="text-gray-600 text-sm">Permis de moto ou voiture valide au Cameroun.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Téléphone smartphone</h3>
+                        <p class="text-gray-600 text-sm">Téléphone Android ou iOS pour l'application.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Véhicule en bon état</h3>
+                        <p class="text-gray-600 text-sm">Moto ou voiture en état de fonctionnement optimal.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Casque (pour moto)</h3>
+                        <p class="text-gray-600 text-sm">Casque homologué pour la sécurité.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Assurance valide</h3>
+                        <p class="text-gray-600 text-sm">Assurance véhicule valide et à jour.</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-4">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check text-green-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800">Casier judiciaire vierge</h3>
+                        <p class="text-gray-600 text-sm">Extrait de casier judiciaire de moins de 3 mois.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Formulaire d'inscription</h2>
+            
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Personal Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                        <input type="text" name="first_name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                        <input type="text" name="last_name" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" name="email" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                        <input type="tel" name="phone" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Numéro de permis</label>
+                        <input type="text" name="license_number" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Date d'expiration du permis</label>
+                        <input type="date" name="license_expiry" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                    </div>
+                </div>
+                
+                <!-- Vehicle Info -->
+                <div class="border-t border-gray-200 pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Informations sur le véhicule</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Type de véhicule</label>
+                            <select name="vehicle_type" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                                <option value="">Sélectionnez...</option>
+                                <option value="moto">Moto</option>
+                                <option value="taxi">Taxi</option>
+                                <option value="van">Van</option>
+                                <option value="vip">VIP</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Plaque d'immatriculation</label>
+                            <input type="text" name="vehicle_plate" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Modèle du véhicule</label>
+                            <input type="text" name="vehicle_model" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Couleur</label>
+                            <input type="text" name="vehicle_color" required class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Documents -->
+                <div class="border-t border-gray-200 pt-6 mt-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Documents</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Photo du permis de conduire</label>
+                            <input type="file" name="license_image" accept="image/*" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Photo du véhicule</label>
+                            <input type="file" name="vehicle_image" accept="image/*" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terms -->
+                <div class="flex items-start">
+                    <input type="checkbox" id="terms" name="terms" required class="h-4 w-4 text-orange-500 border-gray-300 rounded mt-0.5">
+                    <label for="terms" class="ml-2 text-sm text-gray-600">
+                        J'accepte les <a href="#" class="text-orange-500 hover:underline">conditions d'utilisation</a> des chauffeurs,
+                        la <a href="#" class="text-orange-500 hover:underline">politique de confidentialité</a> et
+                        <a href="#" class="text-orange-500 hover:underline">les conditions tarifaires</a>.
+                    </label>
+                </div>
+                
+                <div class="flex items-start">
+                    <input type="checkbox" id="background_check" name="background_check" required class="h-4 w-4 text-orange-500 border-gray-300 rounded mt-0.5">
+                    <label for="background_check" class="ml-2 text-sm text-gray-600">
+                        J'autorise MoveNow à effectuer une vérification de mes antécédents.
+                    </label>
+                </div>
+                
+                <button type="submit" class="w-full bg-orange-500 text-white py-4 rounded-xl font-semibold hover:bg-orange-600 transition shadow-lg">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Soumettre ma candidature
+                </button>
+            </form>
+        </div>
+
+        <!-- FAQ -->
+        <div class="bg-white rounded-2xl shadow-lg p-8 mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Questions fréquentes</h2>
+            
+            <div class="space-y-4">
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <button class="flex items-center justify-between w-full text-left">
+                        <span class="font-medium text-gray-800">Combien de temps prend la validation?</span>
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                    </button>
+                    <p class="text-gray-600 mt-2 hidden">La validation prend généralement 24 à 48 heures ouvrées.</p>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <button class="flex items-center justify-between w-full text-left">
+                        <span class="font-medium text-gray-800">Quelle est la commission prélevée?</span>
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                    </button>
+                    <p class="text-gray-600 mt-2 hidden">MoveNow prélève une commission de 15% sur chaque course.</p>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <button class="flex items-center justify-between w-full text-left">
+                        <span class="font-medium text-gray-800">Quand suis-je payé?</span>
+                        <i class="fas fa-chevron-down text-gray-400"></i>
+                    </button>
+                    <p class="text-gray-600 mt-2 hidden">Les paiements sont effectués tous les mercredis sur votre compte Mobile Money.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

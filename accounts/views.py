@@ -23,27 +23,39 @@ from .utils import send_verification_email, send_password_reset_email
 
 @unauthenticated_user
 def register(request):
-    """Inscription utilisateur"""
+    """Inscription utilisateur - Version simplifiée"""
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save()
             
-            # Connecter l'utilisateur
-            login(request, user)
-            
-            # Créer le portefeuille et les paramètres
+            # Créer le portefeuille et les paramètres AVANT la connexion
             UserWallet.objects.create(user=user)
             UserSettings.objects.create(user=user)
+
+            # Connecter l'utilisateur immédiatement avec le backend spécifié
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             
-            # Envoyer l'email de vérification
-            user.send_verification_email()
+            # Envoyer l'email de vérification (optionnel maintenant)
+            try:
+                user.send_verification_email()
+                messages.success(
+                    request,
+                    "Compte créé avec succès ! Bienvenue sur MoveNow !"
+                )
+            except Exception:
+                # L'email n'a pas pu être envoyé, ce n'est pas grave
+                messages.success(
+                    request,
+                    "Compte créé avec succès ! Bienvenue sur MoveNow !"
+                )
             
-            messages.success(
-                request,
-                "Compte créé avec succès ! Veuillez vérifier votre email."
-            )
             return redirect('home')
+        else:
+            # Afficher les erreurs de manière plus claire
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = UserRegistrationForm()
     
@@ -51,16 +63,24 @@ def register(request):
 
 @unauthenticated_user
 def login_view(request):
-    """Connexion utilisateur"""
+    """Connexion utilisateur - Accepte email ou téléphone"""
     if request.method == 'POST':
         form = UserLoginForm(request, data=request.POST)
         if form.is_valid():
-            email = form.cleaned_data.get('email')
-            password = form.cleaned_data.get('password')
-            user = authenticate(request, email=email, password=password)
+            user = form.cleaned_data.get('user')
+            remember_me = form.cleaned_data.get('remember_me', False)
             
             if user is not None:
+                # Specify the authentication backend explicitly
+                from django.contrib.auth.backends import ModelBackend
+                user.backend = 'django.contrib.auth.backends.ModelBackend'
                 login(request, user)
+                
+                # Gérer "se souvenir de moi"
+                if remember_me:
+                    request.session.set_expiry(60 * 60 * 24 * 7)  # 1 semaine
+                else:
+                    request.session.set_expiry(0)  # Fermeture du navigateur
                 
                 # Mettre à jour la dernière connexion
                 user.last_login = timezone.now()
@@ -80,6 +100,10 @@ def login_view(request):
                     next_url = 'fleet:dashboard'
                 
                 return redirect(next_url)
+        else:
+            # Ajouter les erreurs générales
+            for error in form.non_field_errors():
+                messages.error(request, error)
     else:
         form = UserLoginForm()
     
@@ -89,39 +113,7 @@ def logout_view(request):
     """Déconnexion utilisateur"""
     logout(request)
     messages.success(request, "Vous avez été déconnecté avec succès.")
-    return redirect('home')
-
-@login_required
-def profile(request):
-    """Profil utilisateur"""
-    user = request.user
-    
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, request.FILES, instance=user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profil mis à jour avec succès.")
-            return redirect('profile')
-    else:
-        form = UserProfileForm(instance=user)
-    
-    # Statistiques
-    stats = {
-        'total_trips': user.trips.count(),
-        'completed_trips': user.trips.filter(status='completed').count(),
-        'avg_rating': user.given_ratings.aggregate(
-            avg=models.Avg('rating')
-        )['avg'] or 0,
-    }
-    
-    context = {
-        'form': form,
-        'stats': stats,
-        'wallet': user.wallet,
-        'settings': user.settings,
-    }
-    
-    return render(request, 'accounts/profile.html', context)
+    return render(request, 'accounts/logout.html')
 
 @login_required
 def change_password(request):
@@ -131,7 +123,7 @@ def change_password(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Mot de passe changé avec succès.")
-            return redirect('profile')
+            return redirect('home')
     else:
         form = PasswordChangeForm(request.user)
 
@@ -170,17 +162,17 @@ def verify_email(request, token):
     try:
         user = User.objects.get(verification_token=token)
         
-        # Vérifier si le token est expiré (24h)
+        # Vérifier si le token est expiré (72h = 259200 secondes)
         token_age = timezone.now() - user.verification_sent_at
-        if token_age.total_seconds() > 86400:  # 24 heures
-            messages.error(request, "Le lien de vérification a expiré.")
+        if token_age.total_seconds() > 259200:  # 72 heures
+            messages.error(request, "Le lien de vérification a expiré. Demandez un nouveau lien.")
             return redirect('resend_verification')
         
         user.verify()
         messages.success(request, "Email vérifié avec succès !")
         
         if not request.user.is_authenticated:
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         
         return redirect('home')
     
@@ -346,3 +338,95 @@ def update_location(request):
             return JsonResponse({'success': False, 'error': str(e)})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+def check_email_exists(request):
+    """Vérifier si un email existe déjà (API pour validation en temps réel)"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            email = data.get('email', '').strip().lower()
+            
+            if not email:
+                return JsonResponse({'exists': False, 'message': 'Email vide'})
+            
+            # Vérifier si l'email existe
+            exists = User.objects.filter(email=email).exists()
+            
+            if exists:
+                return JsonResponse({
+                    'exists': True, 
+                    'message': 'Cet email est déjà utilisé'
+                })
+            else:
+                return JsonResponse({
+                    'exists': False, 
+                    'message': 'Email disponible'
+                })
+                
+        except (ValueError, KeyError, json.JSONDecodeError) as e:
+            return JsonResponse({'exists': False, 'error': 'Données invalides'})
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@csrf_exempt
+def check_phone_exists(request):
+    """Vérifier si un téléphone existe déjà (API pour validation en temps réel)"""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            phone = data.get('phone', '')
+            
+            # Nettoyer le numéro de téléphone
+            phone = ''.join(filter(str.isdigit, phone))
+            
+            if not phone or len(phone) < 9:
+                return JsonResponse({'exists': False, 'message': 'Numéro trop court'})
+            
+            # Vérifier si le téléphone existe
+            exists = User.objects.filter(phone=phone).exists()
+            
+            if exists:
+                return JsonResponse({
+                    'exists': True, 
+                    'message': 'Ce numéro est déjà utilisé'
+                })
+            else:
+                return JsonResponse({
+                    'exists': False, 
+                    'message': 'Numéro disponible'
+                })
+                
+        except (ValueError, KeyError, json.JSONDecodeError) as e:
+            return JsonResponse({'exists': False, 'error': 'Données invalides'})
+    
+    return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+
+@login_required
+def profile(request):
+    """Page de profil utilisateur"""
+    user = request.user
+    
+    if request.method == 'POST':
+        # Mettre à jour le profil
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.phone = request.POST.get('phone', user.phone)
+        user.address = request.POST.get('address', user.address)
+        user.save()
+        
+        messages.success(request, "Profil mis à jour avec succès.")
+        return redirect('accounts:profile')
+    
+    # Récupérer le portefeuille
+    wallet = getattr(user, 'wallet', None)
+    
+    context = {
+        'user': user,
+        'wallet': wallet,
+    }
+    
+    return render(request, 'accounts/profile.html', context)

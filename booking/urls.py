@@ -13,5 +13,6 @@ urlpatterns = [
     path('trip/<int:trip_id>/location/', views.update_trip_location, name='update_trip_location'),
     path('request/<int:request_id>/accept/', views.accept_booking, name='accept_booking'),
     path('request/<int:request_id>/reject/', views.reject_booking, name='reject_booking'),
+    path('shared/', views.shared_ride, name='shared_ride'),
 ]
 
