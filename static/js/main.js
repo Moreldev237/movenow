@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Google Maps API Key
 // Note: This key should match the GOOGLE_MAPS_API_KEY in settings.py
 // For production, set this via environment variable or Django settings
-const GOOGLE_MAPS_API_KEY = 'AIzaSyBV9FAmy_6-ODGG-Dg45m8zj5tte9xkxrY';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCrbY593deLu2Oic6xjs2BLN1UHmi2rBnQ';
 
 
 // Initialize Google Maps (placeholder function)

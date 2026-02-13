@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Accueil - MoveNow{% endblock %}
 
@@ -60,7 +61,7 @@
             <!-- Hero Image/Map -->
             <div class="relative">
                 <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-4 shadow-2xl">
-                    <div id="hero-map" class="h-[500px] rounded-2xl overflow-hidden"></div>
+                    <img src="{% static 'images/taxi.jpeg' %}" alt="Taxi MoveNow" class="h-[500px] rounded-2xl overflow-hidden w-full object-cover">
                 </div>
                 
                 <!-- Floating Card -->
@@ -99,7 +100,17 @@
             {% for vehicle in vehicle_types %}
             <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition cursor-pointer group" onclick="window.location.href='{% url 'booking:book' %}?type={{ vehicle.id }}'">
                 <div class="h-48 bg-gradient-to-br from-orange-100 to-gray-100 rounded-xl mb-4 flex items-center justify-center relative overflow-hidden">
-                    <i class="fas fa-{{ vehicle.icon|default:'motorcycle' }} text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% if vehicle.name == 'moto' %}
+                    <i class="fas fa-motorcycle text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% elif vehicle.name == 'voiture' %}
+                    <i class="fas fa-car text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% elif vehicle.name == 'van' %}
+                    <i class="fas fa-shuttle-van text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% elif vehicle.name == 'vip' %}
+                    <i class="fas fa-crown text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% else %}
+                    <i class="fas fa-car text-6xl text-orange-500 group-hover:scale-110 transition transform"></i>
+                    {% endif %}
                     {% if vehicle.is_popular %}
                     <span class="absolute top-3 right-3 bg-orange-500 text-white text-xs px-3 py-1 rounded-full">Populaire</span>
                     {% endif %}
@@ -206,73 +217,5 @@
         border-radius: 1rem;
     }
 </style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Initialize Hero Map
-    document.addEventListener('DOMContentLoaded', function() {
-        // Mapbox access token - replace with your actual token
-        mapboxgl.accessToken = '{{ mapbox_access_token|default:"pk.eyJ1IjoibW92ZW5vdyIsImEiOiJjbHZkZW5nYm8wMHk0MmpzZzZ3b3E1aGR4In0.example" }}';
-        
-        const map = new mapboxgl.Map({
-            container: 'hero-map',
-            style: 'mapbox://styles/mapbox/dark-v11',
-            center: [9.7678, 4.0511], // Douala coordinates
-            zoom: 12
-        });
-        
-        // Add navigation controls
-        map.addControl(new mapboxgl.NavigationControl());
-        
-        // Add some sample markers
-        const sampleLocations = [
-            { lng: 9.7678, lat: 4.0511, title: 'Position actuelle' },
-            { lng: 9.7800, lat: 4.0600, title: 'Destination' }
-        ];
-        
-        sampleLocations.forEach(loc => {
-            new mapboxgl.Marker({ color: '#f97316' })
-                .setLngLat([loc.lng, loc.lat])
-                .setPopup(new mapboxgl.Popup().setHTML(`<b>${loc.title}</b>`))
-                .addTo(map);
-        });
-        
-        // Draw route line
-        map.on('load', () => {
-            map.addSource('route', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'properties': {},
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': [
-                            [9.7678, 4.0511],
-                            [9.7700, 4.0550],
-                            [9.7750, 4.0580],
-                            [9.7800, 4.0600]
-                        ]
-                    }
-                }
-            });
-            
-            map.addLayer({
-                'id': 'route',
-                'type': 'line',
-                'source': 'route',
-                'layout': {
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'paint': {
-                    'line-color': '#f97316',
-                    'line-width': 4,
-                    'line-opacity': 0.8
-                }
-            });
-        });
-    });
-</script>
 {% endblock %}
 
