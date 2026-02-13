@@ -802,6 +802,34 @@
             setTimeout(() => statusEl.classList.add('hidden'), 3000);
         }
     }
+    
+    // Event listener pour le covoiturage - recalculer le prix quand la case est cochée/décochée
+    document.getElementById('is_shared').addEventListener('change', function() {
+        const pickupLat = document.getElementById('id_pickup_lat').value;
+        const dropoffLat = document.getElementById('id_dropoff_lat').value;
+        
+        // Only recalculate if both locations are set
+        if (pickupLat && dropoffLat) {
+            // Get current distance and duration from the display
+            const distanceText = document.getElementById('estimated-distance').textContent;
+            const durationText = document.getElementById('estimated-duration').textContent;
+            
+            if (distanceText && durationText && 
+                distanceText !== '-- km' && durationText !== '-- min') {
+                const distance = parseFloat(distanceText.replace(' km', ''));
+                const duration = parseInt(durationText.replace(' min', ''));
+                calculateFare(distance, duration);
+            }
+        }
+        
+        // Update the label text to show current state
+        const label = document.querySelector('label[for="is_shared"]');
+        if (this.checked) {
+            label.innerHTML = '<i class="fas fa-users text-orange-500 mr-1"></i><strong>Covoiturage</strong> <span class="text-green-600">(-30%)</span>';
+        } else {
+            label.innerHTML = '<i class="fas fa-users text-orange-500 mr-1"></i><strong>Covoiturage</strong> (-30%)';
+        }
+    });
 </script>
 {% endblock %}
 

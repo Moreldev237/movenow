@@ -6,7 +6,7 @@ app_name = 'booking_api'
 urlpatterns = [
     # Booking Creation
     path('create/', views.book, name='api_book_create'),
-    path('estimate/', views.estimate_fare, name='api_estimate_fare'),
+    path('estimate/', views.estimate_fare_api, name='api_estimate_fare'),
     
     # Booking Tracking
     path('track/<str:booking_id>/', views.track_booking, name='api_track_booking'),

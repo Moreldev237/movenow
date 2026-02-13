@@ -478,7 +478,7 @@ def rate_trip(request, trip_id):
     
     return render(request, 'booking/rate_trip.html', {'trip': trip})
 
-def estimate_fare(request):
+def estimate_fare_api(request):
     """Estimer le prix d'une course (API)"""
     if request.method == 'POST':
         try:
@@ -504,7 +504,9 @@ def estimate_fare(request):
     except VehicleType.DoesNotExist:
         return JsonResponse({'error': 'Type de véhicule invalide'}, status=400)
 
-    estimated_fare = estimate_fare(vehicle_type, distance, duration, is_shared)
+    # Import here to avoid circular import
+    from core.utils import estimate_fare as calculate_fare
+    estimated_fare = calculate_fare(vehicle_type, distance, duration, is_shared)
 
     return JsonResponse({
         'estimated_fare': str(estimated_fare),

@@ -91,6 +91,11 @@ class Booking(models.Model):
         """Définir la date d'expiration à la création"""
         if not self.pk:
             self.expires_at = timezone.now() + timezone.timedelta(minutes=10)
+        
+        # Ensure special_requests is never None
+        if self.special_requests is None:
+            self.special_requests = []
+        
         super().save(*args, **kwargs)
     
     def is_expired(self):
