@@ -5,8 +5,13 @@ from django.conf.urls.static import static
 from django.views.generic import TemplateView
 
 urlpatterns = [
-    # Admin
-    path('admin/', admin.site.urls),
+    # Web - Core app must come BEFORE Django admin to catch custom /admin/ routes
+    path('', include('core.urls')),
+    path('accounts/', include('accounts.urls', namespace='accounts')),
+    path('booking/', include('booking.urls')),
+    path('payment/', include('payment.urls')),
+    path('fleet/', include('fleet.urls')),
+    path('drivers/', include('drivers.urls')),
     
     # API
     path('api/', include([
@@ -18,13 +23,8 @@ urlpatterns = [
         path('core/', include('core.urls_api')),
     ])),
     
-    # Web
-    path('', include('core.urls')),
-    path('accounts/', include('accounts.urls', namespace='accounts')),
-    path('booking/', include('booking.urls')),
-    path('payment/', include('payment.urls')),
-    path('fleet/', include('fleet.urls')),
-    path('drivers/', include('drivers.urls')),
+    # Admin - Django admin comes AFTER custom routes
+    path('admin/', admin.site.urls),
     
     # Static pages
     path('about/', TemplateView.as_view(template_name='core/about.html'), name='about'),

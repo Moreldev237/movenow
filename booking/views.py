@@ -362,11 +362,15 @@ def trip_history(request):
     
     # Filtres
     status = request.GET.get('status')
+    payment_status = request.GET.get('payment_status')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
     
     if status:
         trips = trips.filter(status=status)
+    
+    if payment_status:
+        trips = trips.filter(payment_status=payment_status)
     
     if date_from:
         trips = trips.filter(created_at__date__gte=date_from)
@@ -380,6 +384,7 @@ def trip_history(request):
         'trips': trips,
         'filters': {
             'status': status,
+            'payment_status': payment_status,
             'date_from': date_from,
             'date_to': date_to,
         }

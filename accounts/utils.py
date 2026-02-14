@@ -163,3 +163,50 @@ def send_account_approved_email(user, request=None):
     email.content_subtype = 'html'
     email.send(fail_silently=False)
 
+
+def send_booking_admin_notification(booking):
+    """
+    Send an email notification to the admin when a new booking is created.
+    
+    Args:
+        booking: The Booking instance that was created
+    """
+    from django.utils import timezone
+    
+    # Get admin email from settings
+    admin_email = getattr(settings, 'ADMIN_EMAIL', None)
+    
+    if not admin_email:
+        # Try to get from ADMINS setting
+        if hasattr(settings, 'ADMINS') and settings.ADMINS:
+            admin_email = settings.ADMINS[0][1] if isinstance(settings.ADMINS[0], (list, tuple)) else settings.ADMINS[0]
+        else:
+            return False
+    
+    context = {
+        'booking': booking,
+        'passenger': booking.passenger,
+        'site_name': 'MoveNow',
+        'created_at': timezone.now(),
+    }
+    
+    subject = f'Nouvelle réservation - #{booking.booking_id}'
+    html_message = render_to_string(
+        'booking/emails/admin_booking_notification.html', context
+    )
+    
+    # Send email to admin
+    email = EmailMessage(
+        subject=subject,
+        body=html_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[admin_email],
+    )
+    email.content_subtype = 'html'
+    
+    try:
+        email.send(fail_silently=False)
+        return True
+    except Exception:
+        return False
+

@@ -26,6 +26,15 @@
                     </select>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Statut paiement</label>
+                    <select name="payment_status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500">
+                        <option value="">Tous les paiements</option>
+                        <option value="paid" {% if filters.payment_status == 'paid' %}selected{% endif %}>Payé</option>
+                        <option value="pending" {% if filters.payment_status == 'pending' %}selected{% endif %}>En attente</option>
+                        <option value="failed" {% if filters.payment_status == 'failed' %}selected{% endif %}>Échoué</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Date de début</label>
                     <input type="date" name="date_from" value="{{ filters.date_from }}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-orange-500 focus:border-orange-500">
                 </div>
@@ -67,6 +76,20 @@
                                 {% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                 {{ trip.get_status_display }}
                             </span>
+                            <!-- Payment Status Badge -->
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                                    {% if trip.payment_status == 'paid' %}bg-green-100 text-green-800
+                                    {% elif trip.payment_status == 'pending' %}bg-yellow-100 text-yellow-800
+                                    {% elif trip.payment_status == 'failed' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    <i class="fas fa-credit-card mr-1"></i>
+                                    {% if trip.payment_status == 'paid' %}Payé
+                                    {% elif trip.payment_status == 'pending' %}En attente
+                                    {% elif trip.payment_status == 'failed' %}Échoué
+                                    {% else %}{{ trip.payment_status }}{% endif %}
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -83,6 +106,16 @@
                             {% endif %}
                             {% if trip.duration %}
                                 <span><i class="fas fa-clock mr-1"></i>{{ trip.duration }} min</span>
+                            {% endif %}
+                            {% if trip.payment_method %}
+                                <span><i class="fas fa-credit-card mr-1"></i>
+                                    {% if trip.payment_method == 'cash' %}Espèces
+                                    {% elif trip.payment_method == 'mobile_money' %}Mobile Money
+                                    {% elif trip.payment_method == 'orange_money' %}Orange Money
+                                    {% elif trip.payment_method == 'card' %}Carte bancaire
+                                    {% elif trip.payment_method == 'wallet' %}Portefeuille
+                                    {% else %}{{ trip.payment_method }}{% endif %}
+                                </span>
                             {% endif %}
                         </div>
 
@@ -111,7 +144,7 @@
                 <div class="mt-8 flex justify-center">
                     <div class="flex space-x-2">
                         {% if trips.has_previous %}
-                            <a href="?page={{ trips.previous_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}"
+                            <a href="?page={{ trips.previous_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.payment_status %}&payment_status={{ filters.payment_status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}"
                                class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
@@ -122,7 +155,7 @@
                         </span>
 
                         {% if trips.has_next %}
-                            <a href="?page={{ trips.next_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}"
+                            <a href="?page={{ trips.next_page_number }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.payment_status %}&payment_status={{ filters.payment_status }}{% endif %}{% if filters.date_from %}&date_from={{ filters.date_from }}{% endif %}{% if filters.date_to %}&date_to={{ filters.date_to }}{% endif %}"
                                class="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
                                 <i class="fas fa-chevron-right"></i>
                             </a>

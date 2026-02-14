@@ -8,6 +8,7 @@ from datetime import timedelta
 import json
 
 from .models import VehicleType, Driver, Trip, Fleet, Notification
+from accounts.models import User
 from .forms import ContactForm
 from booking.forms import BookingForm
 from accounts.decorators import passenger_required, driver_required, fleet_owner_required
@@ -648,3 +649,107 @@ def referral(request):
     }
     
     return render(request, 'core/referral.html', context)
+
+
+# ============ ADMIN DASHBOARD ============
+
+@login_required
+def admin_dashboard(request):
+    """Tableau de bord administrateur - Historique de toutes les courses"""
+    # Only allow admin users
+    if not request.user.is_staff and not request.user.is_superuser:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Accès refusé. Vous devez être administrateur.")
+    
+    # Get all trips with filters
+    trips = Trip.objects.all().select_related('passenger', 'driver', 'driver__user', 'vehicle_type')
+    
+    # Filters
+    status = request.GET.get('status')
+    payment_status = request.GET.get('payment_status')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    search_query = request.GET.get('search')
+    
+    if status:
+        trips = trips.filter(status=status)
+    
+    if payment_status:
+        trips = trips.filter(payment_status=payment_status)
+    
+    if date_from:
+        trips = trips.filter(created_at__date__gte=date_from)
+    
+    if date_to:
+        trips = trips.filter(created_at__date__lte=date_to)
+    
+    if search_query:
+        trips = trips.filter(
+            Q(passenger__email__icontains=search_query) |
+            Q(passenger__first_name__icontains=search_query) |
+            Q(passenger__last_name__icontains=search_query) |
+            Q(driver__user__first_name__icontains=search_query) |
+            Q(driver__user__last_name__icontains=search_query) |
+            Q(driver__vehicle_plate__icontains=search_query) |
+            Q(pickup_address__icontains=search_query) |
+            Q(dropoff_address__icontains=search_query)
+        )
+    
+    trips = trips.order_by('-created_at')
+    
+    # Pagination
+    from django.core.paginator import Paginator
+    paginator = Paginator(trips, 25)  # 25 trips per page
+    page_number = request.GET.get('page')
+    trips_page = paginator.get_page(page_number)
+    
+    # Statistics
+    total_revenue = trips.filter(payment_status='paid', status='completed').aggregate(
+        total=Sum('fare')
+    )['total'] or 0
+    
+    pending_payments = trips.filter(payment_status='pending').count()
+    completed_trips = trips.filter(status='completed').count()
+    active_trips = trips.filter(status__in=['accepted', 'arrived', 'started']).count()
+    
+    # Today's stats
+    today = timezone.now().date()
+    today_trips = trips.filter(created_at__date=today).count()
+    today_revenue = trips.filter(
+        created_at__date=today,
+        payment_status='paid',
+        status='completed'
+    ).aggregate(total=Sum('fare'))['total'] or 0
+    
+    # Recent users for quick access
+    recent_users = User.objects.filter(
+        trips__isnull=False
+    ).distinct().order_by('-date_joined')[:10]
+    
+    # Recent drivers
+    from core.models import Driver
+    recent_drivers = Driver.objects.select_related('user').order_by('-created_at')[:10]
+    
+    context = {
+        'trips': trips_page,
+        'total_trips': trips.count(),
+        'filters': {
+            'status': status,
+            'payment_status': payment_status,
+            'date_from': date_from,
+            'date_to': date_to,
+            'search': search_query,
+        },
+        'stats': {
+            'total_revenue': total_revenue,
+            'pending_payments': pending_payments,
+            'completed_trips': completed_trips,
+            'active_trips': active_trips,
+            'today_trips': today_trips,
+            'today_revenue': today_revenue,
+        },
+        'recent_users': recent_users,
+        'recent_drivers': recent_drivers,
+    }
+    
+    return render(request, 'core/admin_dashboard.html', context)

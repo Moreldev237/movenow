@@ -75,9 +75,11 @@
 
                             <div x-show="userMenuOpen" @click.away="userMenuOpen = false" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                                 <div class="py-1">
-                                    <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700">
-                                        <i class="fas fa-tachometer-alt mr-2"></i>Tableau de bord
+                                    {% if user.is_staff or user.is_superuser %}
+                                    <a href="{% url 'admin_dashboard' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700">
+                                        <i class="fas fa-cogs mr-2"></i>Admin Dashboard
                                     </a>
+                                    {% endif %}
                                     <a href="{% url 'booking:history' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-700">
                                         <i class="fas fa-history mr-2"></i>Mes courses
                                     </a>
@@ -119,6 +121,9 @@
                 </a>
 
                 <div class="border-t pt-4 space-y-2">
+                    {% if user.is_staff or user.is_superuser %}
+                    
+                    {% endif %}
                     <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-gray-700 hover:bg-orange-50 rounded">
                         <i class="fas fa-tachometer-alt mr-2"></i>Tableau de bord
                     </a>
