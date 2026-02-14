@@ -34,6 +34,10 @@ def home(request):
         valid_to__gte=timezone.now()
     )[:3]
     
+    # Check for payment success message
+    if request.GET.get('payment') == 'success':
+        messages.success(request, 'Paiement effectué avec succès ! Merci pour votre confiance.')
+    
     context = {
         'vehicle_types': vehicle_types,
         'stats': stats,
@@ -661,7 +665,10 @@ def admin_dashboard(request):
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden("Accès refusé. Vous devez être administrateur.")
     
-    # Get all trips with filters
+    # Determine which tab to show
+    active_tab = request.GET.get('tab', 'trips')
+    
+    # ==================== TRIPS SECTION ====================
     trips = Trip.objects.all().select_related('passenger', 'driver', 'driver__user', 'vehicle_type')
     
     # Filters
@@ -697,11 +704,11 @@ def admin_dashboard(request):
     
     trips = trips.order_by('-created_at')
     
-    # Pagination
+    # Pagination for trips
     from django.core.paginator import Paginator
-    paginator = Paginator(trips, 25)  # 25 trips per page
-    page_number = request.GET.get('page')
-    trips_page = paginator.get_page(page_number)
+    trips_paginator = Paginator(trips, 25)
+    trips_page_number = request.GET.get('page')
+    trips_page = trips_paginator.get_page(trips_page_number)
     
     # Statistics
     total_revenue = trips.filter(payment_status='paid', status='completed').aggregate(
@@ -726,11 +733,55 @@ def admin_dashboard(request):
         trips__isnull=False
     ).distinct().order_by('-date_joined')[:10]
     
-    # Recent drivers
+    # ==================== DRIVERS SECTION ====================
     from core.models import Driver
-    recent_drivers = Driver.objects.select_related('user').order_by('-created_at')[:10]
+    drivers = Driver.objects.select_related('user', 'vehicle_type').all()
+    
+    # Driver filters
+    driver_search = request.GET.get('driver_search', '')
+    is_available = request.GET.get('is_available')
+    is_verified = request.GET.get('is_verified')
+    vehicle_type_filter = request.GET.get('vehicle_type')
+    
+    if driver_search:
+        drivers = drivers.filter(
+            Q(user__first_name__icontains=driver_search) |
+            Q(user__last_name__icontains=driver_search) |
+            Q(user__email__icontains=driver_search) |
+            Q(user__phone__icontains=driver_search) |
+            Q(vehicle_plate__icontains=driver_search) |
+            Q(vehicle_model__icontains=driver_search) |
+            Q(license_number__icontains=driver_search)
+        )
+    
+    if is_available:
+        drivers = drivers.filter(is_available=(is_available == 'true'))
+    
+    if is_verified:
+        drivers = drivers.filter(is_verified=(is_verified == 'true'))
+    
+    if vehicle_type_filter:
+        drivers = drivers.filter(vehicle_type_id=vehicle_type_filter)
+    
+    drivers = drivers.order_by('-created_at')
+    
+    # Driver pagination
+    drivers_paginator = Paginator(drivers, 20)
+    drivers_page_number = request.GET.get('drivers_page')
+    drivers_page = drivers_paginator.get_page(drivers_page_number)
+    
+    # Driver statistics
+    total_drivers = Driver.objects.count()
+    available_drivers = Driver.objects.filter(is_available=True).count()
+    verified_drivers = Driver.objects.filter(is_verified=True).count()
+    active_drivers = Driver.objects.filter(is_active=True).count()
+    
+    # Get all vehicle types for filter dropdown
+    vehicle_types = VehicleType.objects.filter(is_active=True)
     
     context = {
+        'active_tab': active_tab,
+        # Trips
         'trips': trips_page,
         'total_trips': trips.count(),
         'filters': {
@@ -749,7 +800,22 @@ def admin_dashboard(request):
             'today_revenue': today_revenue,
         },
         'recent_users': recent_users,
-        'recent_drivers': recent_drivers,
+        # Drivers
+        'drivers': drivers_page,
+        'total_all_drivers': Driver.objects.count(),
+        'driver_filters': {
+            'search': driver_search,
+            'is_available': is_available,
+            'is_verified': is_verified,
+            'vehicle_type': vehicle_type_filter,
+        },
+        'driver_stats': {
+            'total': total_drivers,
+            'available': available_drivers,
+            'verified': verified_drivers,
+            'active': active_drivers,
+        },
+        'vehicle_types': vehicle_types,
     }
     
     return render(request, 'core/admin_dashboard.html', context)

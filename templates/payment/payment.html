@@ -271,8 +271,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (data.success || response.ok) {
-                    // Redirect to trip detail page
-                    window.location.href = '/booking/trip/' + tripId + '/';
+                    // Redirect to home page with success message
+                    window.location.href = '/?payment=success';
                 } else {
                     // Show error
                     errorMessage.textContent = data.error || 'Une erreur est survenue lors du paiement';

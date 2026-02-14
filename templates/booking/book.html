@@ -1041,16 +1041,12 @@
         searchAvailableDrivers();
     }
     
-    // Search for available drivers
+    // Search for available drivers - grouped by vehicle type
     async function searchAvailableDrivers() {
         const pickupLat = document.getElementById('id_pickup_lat').value;
         const pickupLng = document.getElementById('id_pickup_lng').value;
         const dropoffLat = document.getElementById('id_dropoff_lat').value;
         const dropoffLng = document.getElementById('id_dropoff_lng').value;
-        
-        // Get selected vehicle type
-        const vehicleTypeInput = document.querySelector('input[name="vehicle_type"]:checked');
-        const vehicleTypeId = vehicleTypeInput ? vehicleTypeInput.value : '';
         
         if (!pickupLat || !pickupLng || !dropoffLat || !dropoffLng) {
             alert('Veuillez selectionner un point de depart et une destination.');
@@ -1069,7 +1065,8 @@
         const centerLng = (parseFloat(pickupLng) + parseFloat(dropoffLng)) / 2;
         
         try {
-            const response = await fetch(`/api/booking/drivers/search/?lat=${centerLat}&lng=${centerLng}&vehicle_type=${vehicleTypeId}&radius=10000`, {
+            // Use the by-vehicle-type endpoint to get drivers for ALL vehicle types
+            const response = await fetch(`/api/booking/drivers/by-vehicle-type/?lat=${centerLat}&lng=${centerLng}&radius=10000`, {
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 }
@@ -1079,34 +1076,109 @@
             
             document.getElementById('drivers-loading').classList.add('hidden');
             
-            if (data.drivers && data.drivers.length > 0) {
-                availableDrivers = data.drivers;
-                displayDriversOnMap(data.drivers);
-                displayDriversList(data.drivers);
-                document.getElementById('drivers-list').classList.remove('hidden');
+            if (data.vehicle_types && data.vehicle_types.length > 0) {
+                // Check if there are any available drivers across all vehicle types
+                let totalDrivers = 0;
+                data.vehicle_types.forEach(vt => {
+                    totalDrivers += vt.drivers_count;
+                });
+                
+                if (totalDrivers > 0) {
+                    // Flatten all drivers for map display
+                    const allDrivers = [];
+                    data.vehicle_types.forEach(vt => {
+                        vt.drivers.forEach(driver => {
+                            allDrivers.push(driver);
+                        });
+                    });
+                    
+                    availableDrivers = allDrivers;
+                    displayDriversOnMap(allDrivers);
+                    displayDriversByVehicleType(data.vehicle_types);
+                    document.getElementById('drivers-list').classList.remove('hidden');
+                } else {
+                    showNoDriversMessage('Aucun chauffeur disponible pour le moment.');
+                }
             } else {
-                // Afficher le message d'avertissement de l'API
-                const noDriversEl = document.getElementById('no-drivers');
-                noDriversEl.classList.remove('hidden');
-                
-                if (data.warning) {
-                    // Remplacer le message par défaut par le message de l'API
-                    const messageEl = noDriversEl.querySelector('p.text-gray-500');
-                    const hintEl = noDriversEl.querySelector('p.text-sm.text-gray-400');
-                    if (messageEl) messageEl.textContent = data.warning;
-                    if (hintEl) hintEl.style.display = 'none';
-                }
-                
-                // Afficher les infos de debug en console pour le développement
-                if (data.debug_info) {
-                    console.log('Debug info - Chauffeurs:', data.debug_info);
-                }
+                showNoDriversMessage('Aucun chauffeur disponible.');
             }
             
         } catch (error) {
             console.error('Erreur lors de la recherche de chauffeurs:', error);
             document.getElementById('drivers-loading').classList.add('hidden');
-            document.getElementById('no-drivers').classList.remove('hidden');
+            showNoDriversMessage('Erreur lors de la recherche. Veuillez réessayer.');
+        }
+    }
+    
+    // Show no drivers message
+    function showNoDriversMessage(message) {
+        const noDriversEl = document.getElementById('no-drivers');
+        noDriversEl.classList.remove('hidden');
+        const messageEl = noDriversEl.querySelector('p.text-gray-500');
+        const hintEl = noDriversEl.querySelector('p.text-sm.text-gray-400');
+        if (messageEl) messageEl.textContent = message;
+        if (hintEl) hintEl.style.display = 'none';
+    }
+    
+    // Display drivers grouped by vehicle type
+    function displayDriversByVehicleType(vehicleTypes) {
+        const listContainer = document.getElementById('drivers-list');
+        listContainer.innerHTML = '';
+        
+        vehicleTypes.forEach(vt => {
+            if (vt.drivers && vt.drivers.length > 0) {
+                // Create vehicle type header
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'sticky top-0 bg-white px-3 py-2 border-b border-gray-200 z-10';
+                
+                const vehicleIcon = getVehicleIcon(vt.vehicle_type.name);
+                const displayName = vt.vehicle_type.display_name || vt.vehicle_type.name;
+                
+                headerDiv.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas ${vehicleIcon} text-orange-500 mr-2"></i>
+                            <span class="font-semibold text-gray-800">${displayName}</span>
+                        </div>
+                        <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                            ${vt.available_count} disponible${vt.available_count !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+                `;
+                listContainer.appendChild(headerDiv);
+                
+                // Add drivers for this vehicle type
+                vt.drivers.forEach(driver => {
+                    const driverCard = document.createElement('div');
+                    driverCard.className = 'driver-card p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition mx-3 my-1';
+                    driverCard.onclick = () => selectDriver(driver);
+                    
+                    driverCard.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas ${vehicleIcon} text-gray-500"></i>
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-800">${driver.name}</p>
+                                    <p class="text-xs text-gray-500">${driver.vehicle_model || ''} ${driver.vehicle_color || ''}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-semibold text-orange-500">${driver.distance ? driver.distance.toFixed(1) + ' km' : ''}</p>
+                                <p class="text-xs text-gray-500">${driver.rating ? '★ ' + driver.rating.toFixed(1) : 'Nouveau'}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    listContainer.appendChild(driverCard);
+                });
+            }
+        });
+        
+        // Auto-select the first available driver
+        if (availableDrivers.length > 0) {
+            selectDriver(availableDrivers[0]);
         }
     }
     
@@ -1184,12 +1256,12 @@
         };
     }
     
-    // Display drivers list
+    // Display drivers list and auto-select first driver
     function displayDriversList(drivers) {
         const listContainer = document.getElementById('drivers-list');
         listContainer.innerHTML = '';
         
-        drivers.forEach(driver => {
+        drivers.forEach((driver, index) => {
             const driverCard = document.createElement('div');
             driverCard.className = 'driver-card p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-orange-500 hover:bg-orange-50 transition';
             driverCard.onclick = () => selectDriver(driver);
@@ -1216,6 +1288,11 @@
             
             listContainer.appendChild(driverCard);
         });
+        
+        // Auto-select the first driver by default
+        if (drivers.length > 0) {
+            selectDriver(drivers[0]);
+        }
     }
     
     // Get vehicle icon
@@ -1238,9 +1315,15 @@
         
         // Highlight selected driver in list
         const cards = document.querySelectorAll('.driver-card');
-        cards.forEach(card => {
+        cards.forEach((card, index) => {
             card.classList.remove('border-orange-500', 'bg-orange-50');
             card.classList.add('border-gray-200');
+            
+            // Highlight the selected driver card
+            if (availableDrivers[index] && availableDrivers[index].id === driver.id) {
+                card.classList.remove('border-gray-200');
+                card.classList.add('border-orange-500', 'bg-orange-50');
+            }
         });
         
         // Show payment section

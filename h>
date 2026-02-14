@@ -1,0 +1,101 @@
+[33mcommit cd4ce665521f860126fb57a6963658ac2c231cd7[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Sat Feb 14 08:30:30 2026 +0100
+
+    ajout du dashboard users
+
+[33mcommit c735d255a4a33eb3f6c7aa0bf5b165d2524eabaa[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Sat Feb 14 07:53:32 2026 +0100
+
+    fonctionnement des payements
+
+[33mcommit 3dc3fb459360d118ebf6b106028a1a2ca81febb4[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Sat Feb 14 00:08:33 2026 +0100
+
+    arangement de la page d'acceuil
+
+[33mcommit 35fb7daf38b48a167a1f0a8f96c00ee48ec9f03b[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Fri Feb 13 23:34:19 2026 +0100
+
+    no probleme
+
+[33mcommit 41dce5f4855e32fa23e27a1644b98e00bac07fc0[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Fri Feb 13 19:35:28 2026 +0100
+
+    fonctionnement du covoiturage
+
+[33mcommit 95d930588a6067e4c50d41e4c860f699d5bc8487[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Fri Feb 13 18:57:22 2026 +0100
+
+    fontionnement du map
+
+[33mcommit 5d4776aba5056fbf56460a39c258f2dfabeff61c[m
+Merge: 546c24f 9c6ed8e
+Author: Moreldev237 <moreldev237@gmail.com>
+Date:   Fri Feb 13 13:32:57 2026 +0100
+
+    Merge pull request #2 from Moreldev237/master
+    
+    Master
+
+[33mcommit 9c6ed8ec86bee8d6e024c77bc7a64af7545dd0d3[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Fri Feb 13 13:30:33 2026 +0100
+
+    ajout du manage.py
+
+[33mcommit cb81708b7b8f9d66005c9912b58d758d5f63302c[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Sat Feb 7 19:14:02 2026 +0100
+
+    update requirement
+
+[33mcommit 76957c1aea96c87d1e9df6181946b9fdf4afb273[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Sat Feb 7 19:02:23 2026 +0100
+
+    moevenow:v3.3
+
+[33mcommit b69c38372119a5a26611ce06b9848c0d41f5dca5[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Sat Feb 7 18:41:15 2026 +0100
+
+    movenow:v3.3
+
+[33mcommit 7689da2c7110e679ef13ca40d47b9ae87df36492[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Fri Feb 6 23:53:31 2026 +0100
+
+    movenow:v3.1
+
+[33mcommit 9147b1022dc86dc742bc587e2418514e9d561d7a[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Thu Feb 5 17:32:33 2026 +0100
+
+    movenow--->mvp:v3
+
+[33mcommit 546c24f202af31b6343901f5284df109e46a1683[m
+Merge: d5b7b02 0d055f6
+Author: Moreldev237 <moreldev237@gmail.com>
+Date:   Thu Feb 5 16:46:33 2026 +0100
+
+    Merge pull request #1 from Moreldev237/master
+    
+    mvp-->v2
+
+[33mcommit 0d055f69722836a0479ed37b73cc134a1ce64abd[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Thu Feb 5 15:53:39 2026 +0100
+
+    mvp-->v2
+
+[33mcommit d5b7b0215398e300fe8a10666455f128c2956a8a[m
+Author: Moreldev237 <Moreldev237@gmail.com>
+Date:   Wed Feb 4 20:59:37 2026 +0100
+
+    first commit--->movenow[MVP]

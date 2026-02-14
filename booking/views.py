@@ -749,7 +749,10 @@ def search_drivers_for_booking_api(request):
 
 
 def get_drivers_by_vehicle_type_api(request):
-    """Récupérer les chauffeurs groupés par type de véhicule avec disponibilité et paiements (API)"""
+    """Récupérer les chauffeurs groupés par type de véhicule avec disponibilité et paiements (API)
+    Simulation: Retourne toujours 2 chauffeurs par type de véhicule"""
+    import random
+    
     try:
         lat = float(request.GET.get('lat'))
         lng = float(request.GET.get('lng'))
@@ -764,6 +767,25 @@ def get_drivers_by_vehicle_type_api(request):
     
     # Import payment models
     from payment.models import Transaction
+    
+    # Simulated driver names for each vehicle type
+    simulated_names = {
+        'moto': [('Aissatou', 'Mouaha'), ('Moustapha', 'Kolo'), ('Fatou', 'Biyiti'), ('Ali', 'Ngah')],
+        'voiture': [('Marie', 'Nkoghe'), ('Jean', 'Dupont'), ('Pierre', 'Mouaha'), ('Claire', 'Biyiti')],
+        'van': [('Paul', 'Essomba'), ('Anne', 'Mvongo'), ('Joseph', 'Owona'), ('Grace', 'Bello')],
+        'vip': [('Serge', 'Nguena'), ('David', 'Tchouaha'), ('Francois', 'Mekongo'), ('Michel', 'Abena')],
+    }
+    
+    # Simulated vehicle models
+    vehicle_models = {
+        'moto': ['Yamaha NMAX', 'Honda PCX', 'Sym Symbol', 'Kymco Like'],
+        'voiture': ['Toyota Camry', 'Honda Civic', 'Kia Sportage', 'Hyundai Elantra'],
+        'van': ['Toyota Hiace', 'Nissan Urvan', 'Ford Transit', 'Mercedes Sprinter'],
+        'vip': ['Mercedes Classe E', 'BMW Serie 5', 'Audi A6', 'Lexus ES'],
+    }
+    
+    # Colors for vehicles
+    vehicle_colors = ['Blanc', 'Noir', 'Gris', 'Bleu', 'Rouge', 'Argent']
     
     result = []
     
@@ -781,6 +803,8 @@ def get_drivers_by_vehicle_type_api(request):
         ).select_related('user', 'vehicle_type').order_by('distance')[:20]
         
         drivers_data = []
+        real_drivers_count = 0
+        
         for driver in drivers:
             # Get payment info for this driver
             # Total earnings (from completed trips)
@@ -824,12 +848,69 @@ def get_drivers_by_vehicle_type_api(request):
                 'vehicle_model': driver.vehicle_model if driver.vehicle_model else None,
                 'vehicle_color': driver.vehicle_color if driver.vehicle_color else None,
                 'recent_transactions': transactions_data,
+                'is_simulated': False,
             })
+            real_drivers_count += 1
+        
+        # Ensure at least 2 drivers per vehicle type (simulation)
+        min_drivers = 2
+        current_count = len(drivers_data)
+        
+        if current_count < min_drivers:
+            # Generate simulated drivers to fill the gap
+            vehicle_type_name = vehicle_type.name
+            names_list = simulated_names.get(vehicle_type_name, simulated_names['voiture'])
+            models_list = vehicle_models.get(vehicle_type_name, vehicle_models['voiture'])
+            
+            for i in range(min_drivers - current_count):
+                # Generate offset coordinates (within 500m to 3km from search point)
+                offset_lat = (random.uniform(-0.005, 0.005))  # ~500m
+                offset_lng = (random.uniform(-0.005, 0.005))  # ~500m
+                sim_lat = lat + offset_lat
+                sim_lng = lng + offset_lng
+                
+                # Get simulated name (use different names for different drivers)
+                name_index = (real_drivers_count + i) % len(names_list)
+                first_name, last_name = names_list[name_index]
+                
+                # Generate fake plate number
+                letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                plate = f"CE-{random.randint(1000, 9999)}-{random.choice(letters)}{random.choice(letters)}"
+                
+                # Generate fake phone number
+                phone = f"+237{random.randint(600000000, 699999999)}"
+                
+                # Simulated distance (500m to 3km)
+                sim_distance = random.uniform(0.5, 3.0)
+                
+                drivers_data.append({
+                    'id': f"sim_{vehicle_type_name}_{i+1}",
+                    'name': f"{first_name} {last_name}",
+                    'phone': phone,
+                    'vehicle_type': vehicle_type_name,
+                    'rating': round(random.uniform(4.5, 5.0), 1),
+                    'total_trips': random.randint(50, 500),
+                    'total_earnings': round(random.uniform(50000, 500000), 2),
+                    'is_available': True,
+                    'is_verified': True,
+                    'distance': sim_distance,
+                    'lat': sim_lat,
+                    'lng': sim_lng,
+                    'license_number': f"LIC{random.randint(100000, 999999)}",
+                    'vehicle_plate': plate,
+                    'vehicle_model': models_list[name_index % len(models_list)],
+                    'vehicle_color': random.choice(vehicle_colors),
+                    'recent_transactions': [],
+                    'is_simulated': True,
+                })
         
         # Get base price for this vehicle type
         base_price = float(vehicle_type.base_price) if vehicle_type.base_price else 0
         price_per_km = float(vehicle_type.price_per_km) if vehicle_type.price_per_km else 0
         capacity = vehicle_type.capacity if vehicle_type.capacity else 1
+        
+        # Count available drivers (including simulated)
+        available_count = len([d for d in drivers_data if d['is_available']])
         
         result.append({
             'vehicle_type': {
@@ -841,7 +922,9 @@ def get_drivers_by_vehicle_type_api(request):
                 'capacity': capacity,
             },
             'drivers_count': len(drivers_data),
-            'available_count': len([d for d in drivers_data if d['is_available']]),
+            'available_count': available_count,
+            'real_drivers_count': real_drivers_count,
+            'simulated_drivers_count': len(drivers_data) - real_drivers_count,
             'drivers': drivers_data,
         })
     
@@ -851,7 +934,9 @@ def get_drivers_by_vehicle_type_api(request):
             'lat': lat,
             'lng': lng,
             'radius': radius
-        }
+        },
+        'simulation': True,
+        'message': 'Simulation activée: 2 chauffeurs minimum par type de véhicule'
     })
 
 
