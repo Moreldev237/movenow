@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation de réservation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+            border: 1px solid #ddd;
+        }
+        .booking-id {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #667eea;
+        }
+        .booking-id strong {
+            font-size: 24px;
+            color: #667eea;
+        }
+        .details {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .details h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .fare {
+            font-size: 24px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .status-pending { background: #ffc107; color: #333; }
+        .status-searching { background: #17a2b8; color: white; }
+        .status-accepted { background: #28a745; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 MoveNow</h1>
+        <p>Confirmation de réservation</p>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour <strong>{{ passenger.first_name|default:passenger.email }}</strong>,</p>
+        
+        <p>Votre réservation a été créée avec succès! Voici les détails:</p>
+        
+        <div class="booking-id">
+            <p style="margin: 0; color: #666; font-size: 14px;">Numéro de réservation</p>
+            <strong>{{ booking_id }}</strong>
+        </div>
+        
+        <div class="details">
+            <h3>📍 Détails du trajet</h3>
+            <div class="detail-row">
+                <span class="label">Type de véhicule:</span>
+                <span class="value">{{ vehicle_type.name|title }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Adresse de prise en charge:</span>
+                <span class="value">{{ pickup_address }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Adresse de destination:</span>
+                <span class="value">{{ dropoff_address }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Distance:</span>
+                <span class="value">{{ distance }} km</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Durée estimée:</span>
+                <span class="value">{{ duration }} minutes</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Prix estimé:</span>
+                <span class="value fare">{{ estimated_fare }} XAF</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Statut:</span>
+                <span class="value">
+                    {% if booking.status == 'pending' %}
+                        <span class="status-badge status-pending">En attente</span>
+                    {% elif booking.status == 'searching' %}
+                        <span class="status-badge status-searching">Recherche de chauffeur</span>
+                    {% elif booking.status == 'accepted' %}
+                        <span class="status-badge status-accepted">Confirmé</span>
+                    {% else %}
+                        {{ booking.status|title }}
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        {% if trip %}
+        <div class="details">
+            <h3>🚗 Informations chauffeur</h3>
+            <p>Un chauffeur a été assigné à votre course. Vous recevrez les détails du chauffeur par SMS ou notification.</p>
+        </div>
+        {% endif %}
+        
+        <p>Merci d'avoir choisi <strong>MoveNow</strong>!</p>
+        
+        <div class="footer">
+            <p>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
+            <p>© 2024 MoveNow - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html>
+

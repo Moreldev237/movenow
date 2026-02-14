@@ -266,6 +266,139 @@
                         </button>
                     </form>
                     
+                    <!-- Payment Simulation Modal -->
+                    <div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+                        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+                            <!-- Modal Header -->
+                            <div class="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xl font-bold text-white">
+                                        <i class="fas fa-credit-card mr-2"></i>
+                                        Paiement
+                                    </h3>
+                                    <button type="button" onclick="closePaymentModal()" class="text-white hover:text-gray-200">
+                                        <i class="fas fa-times text-xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Modal Body -->
+                            <div class="p-6">
+                                <!-- Trip Summary -->
+                                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                                    <h4 class="font-semibold text-gray-800 mb-3">Récapitulatif</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Chauffeur</span>
+                                            <span class="font-medium" id="modal-driver-name">--</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Distance</span>
+                                            <span class="font-medium" id="modal-distance">-- km</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Durée</span>
+                                            <span class="font-medium" id="modal-duration">-- min</span>
+                                        </div>
+                                        <hr class="my-2">
+                                        <div class="flex justify-between text-lg font-bold">
+                                            <span>Total à payer</span>
+                                            <span class="text-orange-500" id="modal-fare">-- XAF</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Method Selection -->
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Mode de paiement</label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="modal_payment_method" value="cash" class="sr-only peer" checked>
+                                            <div class="p-3 border border-gray-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 transition text-center">
+                                                <i class="fas fa-money-bill-wave text-green-500 text-xl mb-1"></i>
+                                                <p class="text-xs font-medium">Espèces</p>
+                                            </div>
+                                        </label>
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="modal_payment_method" value="mobile_money" class="sr-only peer">
+                                            <div class="p-3 border border-gray-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 transition text-center">
+                                                <i class="fas fa-mobile-alt text-orange-500 text-xl mb-1"></i>
+                                                <p class="text-xs font-medium">Mobile Money</p>
+                                            </div>
+                                        </label>
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="modal_payment_method" value="orange_money" class="sr-only peer">
+                                            <div class="p-3 border border-gray-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 transition text-center">
+                                                <i class="fab fa-orange text-yellow-500 text-xl mb-1"></i>
+                                                <p class="text-xs font-medium">Orange Money</p>
+                                            </div>
+                                        </label>
+                                        <label class="cursor-pointer">
+                                            <input type="radio" name="modal_payment_method" value="card" class="sr-only peer">
+                                            <div class="p-3 border border-gray-200 rounded-lg peer-checked:border-orange-500 peer-checked:bg-orange-50 transition text-center">
+                                                <i class="far fa-credit-card text-blue-500 text-xl mb-1"></i>
+                                                <p class="text-xs font-medium">Carte</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Details (for card/mobile money) -->
+                                <div id="modal-payment-details" class="hidden mb-4 p-4 bg-gray-50 rounded-lg">
+                                    <div id="card-details" class="hidden space-y-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-600 mb-1">Numéro de carte</label>
+                                            <input type="text" id="card-number" placeholder="1234 5678 9012 3456" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">Expire</label>
+                                                <input type="text" id="card-expiry" placeholder="MM/YY" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-medium text-gray-600 mb-1">CVV</label>
+                                                <input type="text" id="card-cvv" placeholder="123" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="mobile-details" class="hidden">
+                                        <p class="text-sm text-gray-600 mb-2">Un code de confirmation sera envoyé à votre numéro.</p>
+                                        <input type="text" id="phone-number" placeholder="Votre numéro de téléphone" class="w-full px-3 py-2 border rounded-lg text-sm">
+                                    </div>
+                                </div>
+                                
+                                <!-- Loading State -->
+                                <div id="payment-loading" class="hidden text-center py-4">
+                                    <div class="loading-spinner mx-auto mb-3" style="width:40px;height:40px;"></div>
+                                    <p class="text-gray-600">Traitement du paiement...</p>
+                                </div>
+                                
+                                <!-- Error Message -->
+                                <div id="payment-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    <p class="text-red-600 text-sm"><i class="fas fa-exclamation-circle mr-1"></i> <span id="payment-error-text">Erreur lors du paiement</span></p>
+                                </div>
+                                
+                                <!-- Success Message -->
+                                <div id="payment-success" class="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                                    <i class="fas fa-check-circle text-green-500 text-3xl mb-2"></i>
+                                    <p class="text-green-700 font-semibold">Paiement confirmé!</p>
+                                    <p class="text-green-600 text-sm">Création de votre course...</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Modal Footer -->
+                            <div class="px-6 py-4 bg-gray-50 flex gap-3" id="modal-footer">
+                                <button type="button" onclick="closePaymentModal()" class="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-100 transition">
+                                    Annuler
+                                </button>
+                                <button type="button" onclick="processPayment()" class="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl font-semibold hover:bg-orange-600 transition">
+                                    <i class="fas fa-lock mr-2"></i>
+                                    Payer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <!-- Safety Info -->
                     <div class="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
                         <div class="flex items-start">
@@ -1181,6 +1314,179 @@
         }
         return cookieValue;
     }
+    
+    // ===========================================
+    // Payment Modal Functions
+    // ===========================================
+    
+    // Open payment modal
+    function openPaymentModal() {
+        if (!selectedDriver) {
+            alert('Veuillez sélectionner un chauffeur.');
+            return;
+        }
+        
+        // Get current trip details
+        const distance = document.getElementById('estimated-distance').textContent;
+        const duration = document.getElementById('estimated-duration').textContent;
+        const fare = document.getElementById('estimated-fare').textContent;
+        
+        // Update modal content
+        document.getElementById('modal-driver-name').textContent = selectedDriver.name;
+        document.getElementById('modal-distance').textContent = distance || '-- km';
+        document.getElementById('modal-duration').textContent = duration || '-- min';
+        document.getElementById('modal-fare').textContent = fare || '-- XAF';
+        
+        // Reset modal state
+        document.getElementById('payment-loading').classList.add('hidden');
+        document.getElementById('payment-error').classList.add('hidden');
+        document.getElementById('payment-success').classList.add('hidden');
+        document.getElementById('modal-payment-details').classList.add('hidden');
+        document.getElementById('modal-footer').classList.remove('hidden');
+        
+        // Show modal
+        document.getElementById('payment-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+    
+    // Close payment modal
+    function closePaymentModal() {
+        document.getElementById('payment-modal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    
+    // Handle payment method change in modal
+    document.querySelectorAll('input[name="modal_payment_method"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            const detailsSection = document.getElementById('modal-payment-details');
+            const cardDetails = document.getElementById('card-details');
+            const mobileDetails = document.getElementById('mobile-details');
+            
+            if (this.value === 'card') {
+                detailsSection.classList.remove('hidden');
+                cardDetails.classList.remove('hidden');
+                mobileDetails.classList.add('hidden');
+            } else if (this.value === 'mobile_money' || this.value === 'orange_money') {
+                detailsSection.classList.remove('hidden');
+                cardDetails.classList.add('hidden');
+                mobileDetails.classList.remove('hidden');
+            } else {
+                detailsSection.classList.add('hidden');
+            }
+        });
+    });
+    
+    // Process payment
+    async function processPayment() {
+        if (!selectedDriver) {
+            alert('Veuillez sélectionner un chauffeur.');
+            return;
+        }
+        
+        // Get payment method
+        const paymentMethod = document.querySelector('input[name="modal_payment_method"]:checked').value;
+        
+        // Show loading
+        document.getElementById('payment-loading').classList.remove('hidden');
+        document.getElementById('modal-footer').classList.add('hidden');
+        document.getElementById('payment-error').classList.add('hidden');
+        
+        // Get booking details from form
+        const pickupLat = document.getElementById('id_pickup_lat').value;
+        const pickupLng = document.getElementById('id_pickup_lng').value;
+        const dropoffLat = document.getElementById('id_dropoff_lat').value;
+        const dropoffLng = document.getElementById('id_dropoff_lng').value;
+        const pickupAddress = document.getElementById('id_pickup_address').value;
+        const dropoffAddress = document.getElementById('id_dropoff_address').value;
+        const vehicleTypeInput = document.querySelector('input[name="vehicle_type"]:checked');
+        const vehicleTypeId = vehicleTypeInput ? vehicleTypeInput.value : '';
+        
+        // Get distance and fare
+        const distanceText = document.getElementById('estimated-distance').textContent;
+        const durationText = document.getElementById('estimated-duration').textContent;
+        const fareText = document.getElementById('estimated-fare').textContent;
+        
+        const distance = parseFloat(distanceText.replace(' km', '').replace(',', '.')) || 0;
+        const duration = parseInt(durationText.replace(' min', '')) || 0;
+        const fare = parseFloat(fareText.replace(' XAF', '').replace(/\s/g, '').replace(',', '.')) || 0;
+        
+        const isShared = document.getElementById('is_shared').checked;
+        
+        try {
+            // Simulate payment processing delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Call API to create booking and confirm payment
+            const response = await fetch('/api/booking/confirm-payment/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    driver_id: selectedDriver.id,
+                    pickup_lat: pickupLat,
+                    pickup_lng: pickupLng,
+                    dropoff_lat: dropoffLat,
+                    dropoff_lng: dropoffLng,
+                    pickup_address: pickupAddress,
+                    dropoff_address: dropoffAddress,
+                    vehicle_type_id: vehicleTypeId,
+                    distance: distance,
+                    duration: duration,
+                    fare: fare,
+                    is_shared: isShared,
+                    payment_method: paymentMethod
+                })
+            });
+            
+            const data = await response.json();
+            
+            document.getElementById('payment-loading').classList.add('hidden');
+            
+            if (data.success) {
+                // Show success
+                document.getElementById('payment-success').classList.remove('hidden');
+                
+                // Wait a moment then redirect
+                setTimeout(() => {
+                    if (data.trip_url) {
+                        window.location.href = data.trip_url;
+                    } else {
+                        // Fallback redirect
+                        window.location.href = '/booking/trip/' + data.trip_id + '/';
+                    }
+                }, 1500);
+                
+            } else {
+                // Show error
+                document.getElementById('payment-error').classList.remove('hidden');
+                document.getElementById('payment-error-text').textContent = data.error || 'Erreur lors du paiement';
+                document.getElementById('modal-footer').classList.remove('hidden');
+            }
+            
+        } catch (error) {
+            console.error('Erreur paiement:', error);
+            document.getElementById('payment-loading').classList.add('hidden');
+            document.getElementById('payment-error').classList.remove('hidden');
+            document.getElementById('payment-error-text').textContent = 'Erreur de connexion. Veuillez réessayer.';
+            document.getElementById('modal-footer').classList.remove('hidden');
+        }
+    }
+    
+    // Update the form submission handler to use modal instead
+    document.getElementById('booking-form').addEventListener('submit', function(e) {
+        // Prevent default form submission
+        e.preventDefault();
+        
+        if (!selectedDriver) {
+            alert('Veuillez sélectionner un chauffeur.');
+            return;
+        }
+        
+        // Open payment modal instead of direct submission
+        openPaymentModal();
+    });
 </script>
 {% endblock %}
 

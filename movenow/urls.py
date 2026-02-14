@@ -28,7 +28,6 @@ urlpatterns = [
     
     # Static pages
     path('about/', TemplateView.as_view(template_name='core/about.html'), name='about'),
-    path('contact/', TemplateView.as_view(template_name='core/contact.html'), name='contact'),
     path('privacy/', TemplateView.as_view(template_name='core/privacy_policy.html'), name='privacy_policy'),
     path('terms/', TemplateView.as_view(template_name='core/terms.html'), name='terms'),
     

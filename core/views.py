@@ -8,6 +8,7 @@ from datetime import timedelta
 import json
 
 from .models import VehicleType, Driver, Trip, Fleet, Notification
+from .forms import ContactForm
 from booking.forms import BookingForm
 from accounts.decorators import passenger_required, driver_required, fleet_owner_required
 
@@ -48,19 +49,21 @@ def about(request):
 def contact(request):
     """Page Contact"""
     if request.method == 'POST':
-        # Traiter le formulaire de contact
-        first_name = request.POST.get('first_name')
-        last_name = request.POST.get('last_name')
-        email = request.POST.get('email')
-        phone = request.POST.get('phone')
-        message = request.POST.get('message')
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            # Récupérer les données du formulaire
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            email = form.cleaned_data['email']
+            phone = form.cleaned_data.get('phone', '')
+            message = form.cleaned_data['message']
 
-        # Envoyer l'email
-        from django.core.mail import send_mail
-        from django.conf import settings
+            # Envoyer l'email
+            from django.core.mail import send_mail
+            from django.conf import settings
 
-        subject = f"Nouveau message de contact de {first_name} {last_name}"
-        email_message = f"""
+            subject = f"Nouveau message de contact de {first_name} {last_name}"
+            email_message = f"""
 Nouveau message de contact depuis le site MoveNow :
 
 Nom complet : {first_name} {last_name}
@@ -69,23 +72,29 @@ Téléphone : {phone or 'Non fourni'}
 
 Message :
 {message}
-        """
+            """
 
-        try:
-            send_mail(
-                subject=subject,
-                message=email_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=['Moreldev237@gmail.com'],
-                fail_silently=False,
-            )
-            messages.success(request, 'Merci pour votre message ! Nous vous répondrons bientôt.')
-        except Exception as e:
-            messages.error(request, 'Une erreur s\'est produite lors de l\'envoi du message. Veuillez réessayer.')
+            try:
+                send_mail(
+                    subject=subject,
+                    message=email_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=['Moreldev237@gmail.com'],
+                    fail_silently=False,
+                )
+                messages.success(request, 'Merci pour votre message ! Nous vous répondrons bientôt.')
+                return redirect('contact')
+            except Exception as e:
+                # En mode debug, afficher l'erreur
+                if settings.DEBUG:
+                    messages.error(request, f'Erreur lors de l\'envoi du message: {str(e)}')
+                else:
+                    messages.error(request, 'Une erreur s\'est produite lors de l\'envoi du message. Veuillez réessayer.')
+                # Ne pas rediriger pour permettre à l'utilisateur de retenter
+    else:
+        form = ContactForm()
 
-        return redirect('contact')
-
-    return render(request, 'core/contact.html')
+    return render(request, 'core/contact.html', {'form': form})
 
 @login_required
 def dashboard(request):

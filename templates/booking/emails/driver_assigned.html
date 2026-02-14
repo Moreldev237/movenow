@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chauffeur assigné</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+            border: 1px solid #ddd;
+        }
+        .booking-id {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            border: 2px solid #667eea;
+        }
+        .booking-id strong {
+            font-size: 24px;
+            color: #667eea;
+        }
+        .driver-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .driver-avatar {
+            width: 80px;
+            height: 80px;
+            background: #667eea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            color: white;
+        }
+        .driver-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .driver-rating {
+            color: #ffc107;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .vehicle-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .vehicle-info p {
+            margin: 5px 0;
+        }
+        .details {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .details h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+        }
+        .value {
+            color: #333;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 MoveNow</h1>
+        <p>Chauffeur assigné à votre course!</p>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour <strong>{{ passenger.first_name|default:passenger.email }}</strong>,</p>
+        
+        <p>🎉 Excellent nouvelles! Un chauffeur a été assigné à votre réservation.</p>
+        
+        <div class="booking-id">
+            <p style="margin: 0; color: #666; font-size: 14px;">Numéro de réservation</p>
+            <strong>{{ booking.booking_id }}</strong>
+        </div>
+        
+        <div class="driver-card">
+            <div class="driver-avatar">👤</div>
+            <div class="driver-name">
+                {{ driver_user.first_name|default:"Chauffeur" }} {{ driver_user.last_name|default:"" }}
+            </div>
+            {% if driver_rating %}
+            <div class="driver-rating">
+                {% if driver_rating >= 4.5 %}⭐⭐⭐⭐⭐
+                {% elif driver_rating >= 4.0 %}⭐⭐⭐⭐
+                {% elif driver_rating >= 3.0 %}⭐⭐⭐
+                {% else %}⭐⭐
+                {% endif %}
+                ({{ driver_rating|floatformat:1 }})
+            </div>
+            {% endif %}
+            
+            <div class="vehicle-info">
+                <p><strong>🚗 Véhicule:</strong> {{ vehicle_color|title }} {{ vehicle_model|default:"Non spécifié" }}</p>
+                <p><strong>📋 Plaque:</strong> {{ vehicle_plate|default:"Non spécifiée" }}</p>
+                {% if driver_phone %}
+                <p><strong>📞 Téléphone:</strong> {{ driver_phone }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="details">
+            <h3>📍 Détails du trajet</h3>
+            <div class="detail-row">
+                <span class="label">Adresse de prise en charge:</span>
+                <span class="value">{{ booking.pickup_address }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Adresse de destination:</span>
+                <span class="value">{{ booking.dropoff_address }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Distance:</span>
+                <span class="value">{{ booking.distance }} km</span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Prix estimé:</span>
+                <span class="value">{{ booking.estimated_fare }} XAF</span>
+            </div>
+        </div>
+        
+        <p>📱 Votre chauffeur est en route! Vous pouvez suivre votre course en temps réel depuis l'application.</p>
+        
+        <div class="footer">
+            <p>Merci d'avoir choisi <strong>MoveNow</strong>!</p>
+            <p>Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
+            <p>© 2024 MoveNow - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -10,6 +10,7 @@ import json
 import uuid
 
 from accounts.decorators import passenger_required, driver_required
+from accounts.utils import send_booking_admin_notification
 from .forms import BookingForm
 from .models import Booking, BookingRequest, TripTracking
 from core.models import Trip, Driver, VehicleType
@@ -91,6 +92,9 @@ def book(request):
                 )
 
                 booking.save()
+
+                # Send notification to admin about new booking
+                send_booking_admin_notification(booking)
 
                 # Vérifier si un chauffeur a été sélectionné
                 selected_driver_id = request.POST.get('selected_driver_id')
@@ -857,3 +861,106 @@ def shared_ride(request):
     }
     
     return render(request, 'booking/shared_ride.html', context)
+
+
+@login_required
+@passenger_required
+def confirm_payment_and_create_trip(request):
+    """Confirmer le paiement et créer le trip (API)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Données JSON invalides'}, status=400)
+    
+    # Extraire les données
+    driver_id = data.get('driver_id')
+    pickup_lat = float(data.get('pickup_lat', 0))
+    pickup_lng = float(data.get('pickup_lng', 0))
+    dropoff_lat = float(data.get('dropoff_lat', 0))
+    dropoff_lng = float(data.get('dropoff_lng', 0))
+    pickup_address = data.get('pickup_address', '')
+    dropoff_address = data.get('dropoff_address', '')
+    vehicle_type_id = data.get('vehicle_type_id')
+    distance = float(data.get('distance', 0))
+    duration = int(data.get('duration', 0))
+    fare = float(data.get('fare', 0))
+    is_shared = data.get('is_shared', False)
+    payment_method = data.get('payment_method', 'cash')
+    
+    # Validation
+    if not driver_id:
+        return JsonResponse({'success': False, 'error': 'ID du chauffeur requis'}, status=400)
+    
+    if not pickup_lat or not dropoff_lat:
+        return JsonResponse({'success': False, 'error': 'Coordonnées requises'}, status=400)
+    
+    # Vérifier le chauffeur
+    try:
+        driver = Driver.objects.get(id=driver_id, is_available=True, is_verified=True)
+    except Driver.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Chauffeur non disponible'}, status=400)
+    
+    # Récupérer le type de véhicule
+    vehicle_type = None
+    if vehicle_type_id:
+        try:
+            vehicle_type = VehicleType.objects.get(id=vehicle_type_id, is_active=True)
+        except VehicleType.DoesNotExist:
+            pass
+    
+    # Calculer le prix final avec réduction covoiturage
+    final_fare = fare
+    sharing_discount = 0
+    if is_shared:
+        sharing_discount = fare * 0.3  # 30% de réduction
+        final_fare = fare * 0.7
+    
+    # Créer le trip
+    trip = Trip.objects.create(
+        passenger=request.user,
+        driver=driver,
+        vehicle_type=vehicle_type,
+        pickup_address=pickup_address or 'Point de départ',
+        pickup_location=Point(pickup_lng, pickup_lat, srid=4326),
+        dropoff_address=dropoff_address or 'Destination',
+        dropoff_location=Point(dropoff_lng, dropoff_lat, srid=4326),
+        distance=distance,
+        duration=duration,
+        fare=final_fare,
+        is_shared=is_shared,
+        sharing_discount=sharing_discount,
+        status='accepted',
+        payment_method=payment_method,
+        payment_status='pending'  # En attente de paiement
+    )
+    
+    # Simuler le paiement (pour les besoins de la démo)
+    # Dans un vrai système, vous intégrerez un gateway de paiement
+    if payment_method in ['cash', 'mobile_money', 'orange_money', 'card']:
+        # Paiement simulé réussi
+        trip.payment_status = 'paid'
+        trip.save()
+    
+    # Marquer le chauffeur comme non disponible (en course)
+    driver.is_available = False
+    driver.save(update_fields=['is_available'])
+    
+    # Retourner le succès
+    return JsonResponse({
+        'success': True,
+        'trip_id': trip.id,
+        'trip_url': f'/booking/trip/{trip.id}/',
+        'message': 'Course créée avec succès !',
+        'trip_details': {
+            'id': trip.id,
+            'driver_name': f"{driver.user.first_name} {driver.user.last_name}",
+            'pickup_address': trip.pickup_address,
+            'dropoff_address': trip.dropoff_address,
+            'fare': str(trip.fare),
+            'status': trip.status,
+            'payment_status': trip.payment_status
+        }
+    })

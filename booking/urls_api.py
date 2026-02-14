@@ -31,5 +31,8 @@ urlpatterns = [
     path('drivers/nearby/', views.get_nearby_drivers, name='api_nearby_drivers'),
     path('drivers/search/', views.search_drivers_for_booking_api, name='api_search_drivers'),
     path('drivers/by-vehicle-type/', views.get_drivers_by_vehicle_type_api, name='api_drivers_by_vehicle_type'),
+    
+    # Payment Confirmation (NEW)
+    path('confirm-payment/', views.confirm_payment_and_create_trip, name='api_confirm_payment'),
 ]
 

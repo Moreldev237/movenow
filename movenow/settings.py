@@ -276,3 +276,6 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Admin email for notifications
+ADMIN_EMAIL = config('ADMIN_EMAIL', default='admin@movenow.cm')
